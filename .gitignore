@@ -1,0 +1,21 @@
+# Ignore PyCharm project files
+.idea/
+
+# Ignore Python virtual environment
+.venv/
+.venv/*
+
+# Ignore environment files
+.env
+
+# Ignore instance folder and its database files
+/instance/
+/instance/*.db
+
+# Ignore migrations folder and its contents
+/migrations/
+/migrations/*
+
+# Ignore __pycache__ folders
+__pycache__/
+*.pyc

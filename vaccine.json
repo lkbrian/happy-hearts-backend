@@ -1,0 +1,117 @@
+[
+  {
+    "name": "Maya Chebet",
+    "email": "mayachebet@gmail.com",
+    "role": "parent",
+    "password": "parent123"
+  },
+  {
+    "name": "Omar Mwangi",
+    "email": "omarmwangi@gmail.com",
+    "role": "parent",
+    "password": "parent123"
+  },
+  {
+    "name": "Aisha Atieno",
+    "email": "aishaatieno@gmail.com",
+    "role": "parent",
+    "password": "parent123"
+  },
+  {
+    "name": "David Abdikadir",
+    "email": "davidabdikadir@gmail.com",
+    "role": "parent",
+    "password": "parent123"
+  },
+  {
+    "name": "Leah Ekwaru",
+    "email": "leahekwaru@gmail.com",
+    "role": "parent",
+    "password": "parent123"
+  },
+  {
+    "name": "William Kokubo",
+    "email": "williamkokubo@gmail.com",
+    "role": "parent",
+    "password": "parent123"
+  },
+  {
+    "name": "Charlotte Chepng'etich",
+    "email": "charlottechepngetich@gmail.com",
+    "role": "parent",
+    "password": "parent123"
+  },
+  {
+    "name": "Alexander Otiende",
+    "email": "alexanderotiende@gmail.com",
+    "role": "parent",
+    "password": "parent123"
+  },
+  {
+    "name": "Isabella Njeri",
+    "email": "isabellanjeri@gmail.com",
+    "role": "provider",
+    "password": "provider123"
+  },
+  {
+    "name": "Benjamin Kiplangat",
+    "email": "benjaminkiplangat@gmail.com",
+    "role": "provider",
+    "password": "provider123"
+  },
+  {
+    "name": "Evelyn Akinyi",
+    "email": "evelyn akinyi@gmail.com",
+    "role": "provider",
+    "password": "provider123"
+  },
+  {
+    "name": "Daniel Jebet",
+    "email": "danieljebet@gmail.com",
+    "role": "provider",
+    "password": "provider123"
+  },
+  {
+    "name": "Amelia Njambi",
+    "email": "amelianjambi@gmail.com",
+    "role": "accounts_desk",
+    "password": "accounts_desk123"
+  },
+  {
+    "name": "Christopher Omondi",
+    "email": "christopheromondi@gmail.com",
+    "role": "accounts_desk",
+    "password": "accounts_desk123"
+  },
+  {
+    "name": "Sophia Achieng",
+    "email": "sophiaachien@gmail.com",
+    "role": "accounts_desk",
+    "password": "accounts_desk123"
+  },
+  {
+    "name": "Matthew Wafula",
+    "email": "matthewwafula@gmail.com",
+    "role": "accounts_desk",
+    "password": "accounts_desk123"
+  },
+  {
+    "name": "Abigail Chepkirui",
+    "email": "abigailchepkirui@gmail.com",
+    "role": "parent",
+    "password": "parent123"
+  },
+  {
+    "name": "Joseph Abdallah",
+    "email": "josephabdallah@gmail.com",
+    "role": "parent",
+    "password": "parent123"
+  },
+  {
+    "name": "Grace Atieno",
+    "email": "graceatieno@gmail.com",
+    "role": "parent",
+    "password": "parent123"
+  }
+  ]
+
