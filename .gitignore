@@ -13,8 +13,8 @@
 /instance/*.db
 
 # Ignore migrations folder and its contents
-/migrations/
-/migrations/*
+# /migrations/
+# /migrations/*
 
 # Ignore __pycache__ folders
 __pycache__/
