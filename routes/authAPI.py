@@ -56,13 +56,13 @@ class Login(Resource):
                     "email": user.email,
                     "role": user.role,
                     "id": user_id,
-                },
-                expires_delta=timedelta(hours=6),  
+                },  
             )
 
             response = {
                 "token": token,
                 "role": user.role,
+                "id": user_id,
             }
             print(user.email, user.role, user_id)
             return response
