@@ -21,8 +21,8 @@ class MedicalInfoParentAPI(Resource):
         if not data:
             return make_response(jsonify({"msg": "No input provided"}), 400)
         
-        parent_id = data["parent_id"]
-        parent = Parent.query.filter_by(parent_id=parent_id).first()
+        national_id = data["national_id"]
+        parent = Parent.query.filter_by(national_id=national_id).first()
         if not parent:
             return make_response(jsonify({"msg": "Parent not found"}), 404)
 
@@ -34,7 +34,7 @@ class MedicalInfoParentAPI(Resource):
                 tuberclosis=data.get("tuberclosis"),
                 diabetes=data.get("diabetes"),
                 hypertension=data.get("hypertension"),
-                parent_id=data["parent_id"],
+                parent_id=parent.parent_id,
             )
             db.session.add(info)
             db.session.commit()

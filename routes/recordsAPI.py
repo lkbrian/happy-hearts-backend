@@ -21,20 +21,22 @@ class RecordsApi(Resource):
         if not data:
             return make_response(jsonify({"msg": "No input provided"}), 400)
 
-        parent_id = data["parent_id"]
-        child_id = data["child_id"]
-        child_certificate_no = data["child_certificate_no"]
+        parent_id = data.get("parent_id")
+        child_id = data.get("child_id")
+        national_id = data.get("national_id")
+        child_certificate_no = data.get("child_certificate_no")
         provider_id=data["provider_id"]
         vaccine_id=data["vaccine_id"]
 
-        if not parent_id or not (child_certificate_no or child_id):
+        if not (parent_id or national_id) or not (child_certificate_no or child_id):
             return make_response(jsonify({"msg": "Parent ID and Child Certificate No are required"}), 400)
 
-        parent = Parent.query.filter_by(parent_id=parent_id).first()
+        parent = (
+            Parent.query.filter_by(parent_id=parent_id).first()
+            or Parent.query.filter_by(national_id=national_id).first()
+        )
         if not parent:
             return make_response(jsonify({"msg": "Parent not found"}), 404)
-
-                
 
         child = Child.query.filter_by(certificate_No=child_certificate_no).first() or Child.query.filter_by(child_id=child_id).first()
         if not child:
@@ -91,7 +93,7 @@ class RecordsApi(Resource):
                     provider = Provider.query.get(data.get("provider_id"))
                     if not provider:
                         return make_response(jsonify({"msg": "Provider not found"}), 404)   
-                    
+
                 elif field == "child_certificate_no":
                     child = Child.query.get(data.get("child_certificate_no"))
                     if not child:

@@ -23,7 +23,12 @@ class DischargeSummaryAPI(Resource):
         data = request.json
         if not data:
             return make_response(jsonify({"msg": "No input provided"}), 400)
-        parent = Parent.query.get(data.get("parent_id"))
+
+        national_id = data.get("national_id")
+        parent_id = data.get("parent_id")
+
+        parent = Parent.query.filter_by(national_id=national_id).first() or Parent.query.filter_by(parent_id=parent_id).first()
+
         provider = Provider.query.get(data.get("provider_id"))
 
         if not parent:
@@ -37,7 +42,7 @@ class DischargeSummaryAPI(Resource):
                 discharge_date=datetime.strptime(data["discharge_date"], "%Y-%m-%d %H:%M"),
                 discharge_diagnosis=data["discharge_diagnosis"],
                 procedure=data.get("procedure"),
-                parent_id=data["parent_id"],
+                parent_id=parent.parent_id,
                 provider_id=data["provider_id"],
             )
             db.session.add(summary)
@@ -70,7 +75,7 @@ class DischargeSummaryAPI(Resource):
                     parent = Parent.query.get(value)
                     if not parent:
                         return make_response(jsonify({"msg": "Parent not found"}), 404)
-            
+
                 elif field == "provider_id":
                     provider = Provider.query.get(value)
                     if not provider:

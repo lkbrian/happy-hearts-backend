@@ -20,9 +20,12 @@ class MedicationsAPI(Resource):
         data = request.json
         if not data:
             return make_response(jsonify({"msg": "No input provided"}), 400)
+        national_id = data["national_id"]
+
+        parent = Parent.query.filter_by(national_id=national_id).first()
         provider = Provider.query.get(data.get("provider_id"))
 
-        parent = Parent.query.get(data.get("parent_id"))
+        # parent = Parent.query.get(data.get("parent_id"))
         if not parent:
             return make_response(jsonify({"msg": "Parent not found"}), 404)
 
@@ -38,7 +41,7 @@ class MedicationsAPI(Resource):
                 dose_per_day=data.get("dose_per_day"),
                 referral=data.get("referral"),
                 provider_id=data["provider_id"],
-                parent_id=data["parent_id"],
+                parent_id=parent.parent_id,
             )
             db.session.add(medication)
             db.session.commit()

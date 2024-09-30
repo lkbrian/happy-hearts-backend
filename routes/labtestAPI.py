@@ -34,7 +34,7 @@ class LabTestAPI(Resource):
         test_date = datetime.strptime(test_date_str.strip(), "%Y-%m-%d")
 
         if (child_certificate_no or child_id) and (parent_id or national_id):
-            return make_response(jsonify({"msg": "labtest belongs to parent or child cant be both"}), 400)
+            return make_response(jsonify({"msg": "labtest belongs to parent or child can't be both"}), 400)
 
         elif (child_certificate_no or child_id):
 

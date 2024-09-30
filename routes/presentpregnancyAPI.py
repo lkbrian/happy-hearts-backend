@@ -21,9 +21,9 @@ class PresentPregnancyAPI(Resource):
         data = request.json
         if not data:
             return make_response(jsonify({"msg": "No input provided"}), 400)
-        parent_id=data["parent_id"]
+        national_id = data["national_id"]
 
-        parent=Parent.query.filter_by(parent_id=parent_id)
+        parent = Parent.query.filter_by(national_id=national_id).first()
         if not parent:
             return make_response(jsonify({"msg": "Parent not found"}), 404)
         try:
@@ -63,7 +63,7 @@ class PresentPregnancyAPI(Resource):
 
         try:
             for field, value in data.items():
-                
+
                 if hasattr(pregnancy, field):
                     setattr(pregnancy, field, value)
             db.session.commit()

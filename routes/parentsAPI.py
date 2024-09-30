@@ -36,7 +36,6 @@ class parentsAPI(Resource):
                 national_id=data['national_id'],
                 phone_number=data['phone_number'],
                 gender=data['gender'],
-                passport=data['passport'],
                 password_hash=generate_password_hash(data['password'], method="pbkdf2:sha512"),
             )
 

@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from flask_restful import Resource
 from flask import jsonify, make_response, request
 from flask_jwt_extended import (
@@ -6,7 +7,6 @@ from flask_jwt_extended import (
     get_jwt_identity,
     unset_jwt_cookies,
 )
-from datetime import timedelta
 from models import User, Provider, Parent
 
 
@@ -56,7 +56,8 @@ class Login(Resource):
                     "email": user.email,
                     "role": user.role,
                     "id": user_id,
-                },  
+                },
+                expires_delta=timedelta(hours=6),
             )
 
             response = {

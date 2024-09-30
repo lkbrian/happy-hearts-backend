@@ -23,8 +23,10 @@ class appointmentsAPI(Resource):
         appointment_date = datetime.strptime(data["appointment_date"], "%Y-%m-%d %H:%M").date()
         if appointment_date < date.today():
             return make_response(jsonify({"msg":"Enter a date later than today or today"}),400)
-        
-        parent = Parent.query.get(data.get("parent_id"))
+
+        national_id = data.get("national_id")
+        parent_id = data.get("parent_id")
+        parent = Parent.query.filter_by(national_id=national_id).first() or Parent.query.filter_by(parent_id=parent_id).first()
         provider = Provider.query.get(data.get("provider_id"))
 
         if not parent:
@@ -34,7 +36,7 @@ class appointmentsAPI(Resource):
             return make_response(jsonify({"msg": "Provider not found"}), 404)
         try:
             appointment = Appointment(
-                parent_id=data['parent_id'],
+                parent_id=parent.parent_id,
                 provider_id=data['provider_id'],
                 reason=data['reason'],
                 appointment_date=appointment_date,
@@ -71,7 +73,7 @@ class appointmentsAPI(Resource):
                     parent = Parent.query.get(data.get("parent_id"))                        
                     if not parent:
                         return make_response(jsonify({"msg": "Parent not found"}), 404)
-                    
+
                 elif field == "provider_id":
                     provider = Provider.query.get(data.get("provider_id"))
                     if not provider:

@@ -18,7 +18,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URI")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["JWT_SECRET_KEY"] = ("a0f7c9f0aaf84d96c1aeed05b3de2fb9d1e717c8577b7e7e635d25b7d1842c1d")
+app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY")
 app.config["MAIL_SERVER"] = "smtp.googlemail.com"
 app.config["MAIL_PORT"] = 587
 app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
@@ -50,6 +50,7 @@ scheduler = BackgroundScheduler()
 
 valid_roles = [
     "admin",
+    "Admin",
     "reception_desk",
     "accounts_desk",
 ]
