@@ -28,6 +28,10 @@ class Parent(db.Model, SerializerMixin):
         "address",
         "occupation",
         "passport",
+        "next_of_kin",
+        "kin_phone_number",
+        "kin_email",
+        "kin_occupation",
         "timestamp",
         "vaccination_records",
         "appointments",
@@ -38,8 +42,9 @@ class Parent(db.Model, SerializerMixin):
         "medications",
         "medical_info_parent",
         "delivery",
-        "discharge_summaries",        
+        "discharge_summaries",
         "lab_tests",
+        "prescriptions",
     )
     serialize_rules = (
         "-password_hash",
@@ -55,6 +60,8 @@ class Parent(db.Model, SerializerMixin):
         "-discharge_summaries.parent",
         "-reset_tokens.parent",
         "-lab_tests.parent",
+        "-prescriptions.parent",
+        "-documents.parent",
     )
 
     parent_id = db.Column(db.Integer, primary_key=True)
@@ -67,6 +74,10 @@ class Parent(db.Model, SerializerMixin):
     marital_status = db.Column(db.String, nullable=True, default="")
     address = db.Column(db.String, nullable=True, default="")
     occupation = db.Column(db.String, nullable=True, default="")
+    next_of_kin = db.Column(db.String, nullable=True)
+    kin_phone_number = db.Column(db.Integer, nullable=True)
+    kin_email = db.Column(db.String, nullable=True)
+    kin_occupation = db.Column(db.String, nullable=True)
 
     passport = db.Column(
         db.String,
@@ -107,10 +118,12 @@ class Parent(db.Model, SerializerMixin):
     delivery = db.relationship(
         "Delivery", back_populates="parent", cascade="all, delete-orphan"
     )
+    documents = db.relationship("Document", back_populates="parent", lazy=True)
 
     discharge_summaries = db.relationship("Discharge_summary", back_populates="parent")
     reset_tokens = db.relationship("ResetToken", back_populates="parent")
     lab_tests = db.relationship("LabTest", back_populates="parent", lazy=True)
+    prescriptions = db.relationship("Prescription", back_populates="parent", lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -197,9 +210,7 @@ class Medical_info_parent(db.Model, SerializerMixin):
         "hypertension",
         "parent_id",
     )
-    serialize_rules = (
-        "-parent.medical_info_parent",
-    )
+    serialize_rules = ("-parent.medical_info_parent",)
     history_id = db.Column(db.Integer, primary_key=True)
     blood_transfusion = db.Column(db.String, nullable=True)
     family_history = db.Column(db.String, nullable=True)
@@ -265,9 +276,7 @@ class Present_pregnancy(db.Model, SerializerMixin):
         "parent_id",
         "timestamp",
     )
-    serialize_rules = (
-        "-parent.present_pregnacy",
-    )
+    serialize_rules = ("-parent.present_pregnacy",)
 
     pp_id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, nullable=False)

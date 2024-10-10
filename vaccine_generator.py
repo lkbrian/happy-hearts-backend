@@ -1,5 +1,6 @@
 from models import Vaccine
-from config import db,app
+from config import db, app
+
 data = [
     {
         "name": "Hepatitis B (HepB)",
@@ -99,6 +100,7 @@ data = [
     },
 ]
 
+
 def vaccine_generator():
     for dataitems in data:
         vaccine = Vaccine(
@@ -111,6 +113,7 @@ def vaccine_generator():
         )
         db.session.add(vaccine)
     db.session.commit()
+
 
 with app.app_context():
     vaccine_generator()

@@ -1,13 +1,15 @@
-from datetime import datetime, timedelta
-from flask_restful import Resource
+from datetime import timedelta
+
 from flask import jsonify, make_response, request
 from flask_jwt_extended import (
     create_access_token,
-    jwt_required,
     get_jwt_identity,
+    jwt_required,
     unset_jwt_cookies,
 )
-from models import User, Provider, Parent
+from flask_restful import Resource
+
+from models import Parent, Provider, User
 
 
 class Home(Resource):
@@ -41,7 +43,6 @@ class Login(Resource):
             return make_response(jsonify({"msg": "Account doesn't exist"}), 404)
 
         elif user and user.check_password(password):
-            # Get user ID based on the account type
             if isinstance(user, User):
                 user_id = user.user_id
             elif isinstance(user, Provider):
@@ -50,7 +51,7 @@ class Login(Resource):
                 user_id = user.parent_id
             else:
                 return make_response(jsonify({"msg": "Unknown user type"}), 500)
-
+            print(f"email{user.email},role:{user.role} ,id:{user_id}")
             token = create_access_token(
                 identity={
                     "email": user.email,

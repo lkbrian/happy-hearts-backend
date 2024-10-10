@@ -19,28 +19,43 @@ class ForgotPassword(Resource):
     def post(self):
         data = request.json
         email = data.get("email")
+        account_type = data.get("account_type")
 
         if not email:
             return make_response(jsonify({"error": "Email is required"}), 400)
 
-        # Check if the email belongs to a user, parent, or provider
-        user = User.query.filter_by(email=email).first()
-        parent = Parent.query.filter_by(email=email).first()
-        provider = Provider.query.filter_by(email=email).first()
+        if account_type == "user":
+            user = User.query.filter_by(email=email).first()
+            if user:
+                entity_id = user.user_id
+                entity_type = "user"
+            else:
+                return make_response(
+                    jsonify({"error": "No user found with that email"}), 404
+                )
 
-        if user:
-            entity_id = user.user_id
-            entity_type = "user"
-        elif parent:
-            entity_id = parent.parent_id
-            entity_type = "parent"
-        elif provider:
-            entity_id = provider.provider_id
-            entity_type = "provider"
+        elif account_type == "parent":
+            parent = Parent.query.filter_by(email=email).first()
+            if parent:
+                entity_id = parent.parent_id
+                entity_type = "parent"
+            else:
+                return make_response(
+                    jsonify({"error": "No parent found with that email"}), 404
+                )
+
+        elif account_type == "provider":
+            provider = Provider.query.filter_by(email=email).first()
+            if provider:
+                entity_id = provider.provider_id
+                entity_type = "provider"
+            else:
+                return make_response(
+                    jsonify({"error": "No provider found with that email"}), 404
+                )
+
         else:
-            return make_response(
-                jsonify({"error": "No account found with that email"}), 404
-            )
+            return make_response(jsonify({"msg": "Invalid account type"}), 400)
 
         # Generate reset token
         reset_token = secrets.token_urlsafe(16)
@@ -62,28 +77,67 @@ class ForgotPassword(Resource):
         db.session.commit()
         try:
             reset_link = f"http://localhost:4000/reset_password?token={reset_token}"
+            expiration_time = "1 hour"
 
-            # Plain text message
-            text_body = f"Click the following link to reset your password: {reset_link}"
+            html_body = f"""
+            <div
+              style="width: 100%;background: #ebf2fa;padding: 20px 0 0 0;font-family: system-ui, sans-serif; text-align: center;">
+              <div
+              style="border-top: 6px solid #007BFF; background-color: #fff; display: block; padding:  8px 20px; text-align: center;   max-width: 500px;  border-bottom-left-radius: .4rem; border-bottom-right-radius: .4rem; letter-spacing: .037rem; line-height: 26px;  margin: auto; font-size: 14px; ">
+              <!-- Logo -->
+              <img src="https://res.cloudinary.com/droynil1n/image/upload/v1728204000/e50iplialg1fawi16enn.png"
+                  alt="Happy Hearts Logo" style="width: 70%; height: auto; margin:auto">
+              <!-- Content Section -->
+              <div style="text-align: left; padding-top: 10px;">
+                  <p>We've received a request to reset the password for the Happy Hearts account associated with {email}.
+                  Please note that no changes have been made to your account yet. We recommend resetting your password
+                  immediately
+                  to ensure the security of your account.</p>
+                  <p>Click the button below to reset your password:</p>
+              </div>
+              <!-- Button -->
+              <a href='{reset_link}'
+                  style='display: inline-block;width:90%; padding: 8px 20px;  color: white; background: linear-gradient(to bottom right, rgba(33,121,243,1) 25%, rgba(65,202,227,1) 100%); text-decoration: none; border-radius: .4rem;'>
+                  Reset Password
+              </a>
+              <!-- Additional Information -->
+              <div style="text-align: center; padding-top: 2px;">
+                  <p>This link will expire in <strong>{expiration_time}</strong>.</p>
+                  <p> For assistance, reach us at
+                  <a href='mailto:{os.getenv(' MAIL_USERNAME')}'
+                      style='color: #007BFF; text-decoration: underline;'>{os.getenv('MAIL_USERNAME')}</a>.
+                  </p>
+              </div>
+              </div>
+              <p style="padding: 20px 0 5px 0; text-align: center;color: rgb(150, 150, 150);font-size: 12px;">Happy Hearts
+              Community
+              </p>
+          </div>"""
 
-            # HTML message
-            html_body = f"<p>Click the following link to reset your password:</p> <a href='{reset_link}'>{reset_link}</a>"
-
-            msg = Message('Password Reset Request',
-                sender=os.getenv('MAIL_USERNAME'),
-                recipients=[email])
-
-            # Set both plain text and HTML body
-            msg.body = text_body
-            msg.html = html_body
+            # Create message
+            msg = Message(
+                subject="Reset Your Password",
+                sender=os.getenv("MAIL_USERNAME"),
+                recipients=[email],
+                html=html_body,
+            )
 
             mail.send(msg)
 
-            return make_response(jsonify({'message': 'Password reset link sent to your email'}), 200)
+            return make_response(
+                jsonify({"message": "Password reset link sent to your email"}), 200
+            )
         except Exception as e:
             logger.error(f"Error sending password reset email: {e}")
             db.session.rollback()
-            return make_response(jsonify({'error': 'An error occurred while sending the email. Please try again later.'}), 500)
+            return make_response(
+                jsonify(
+                    {
+                        "error": "An error occurred while sending the email. Please try again later."
+                    }
+                ),
+                500,
+            )
 
 
 class ResetPassword(Resource):
@@ -135,9 +189,7 @@ class ResetPassword(Resource):
             )
 
         # Reset the password
-        entity.password_hash = generate_password_hash(
-            new_password
-        )
+        entity.password_hash = generate_password_hash(new_password)
 
         # Delete the reset token after use
         db.session.delete(reset_token_entry)

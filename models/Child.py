@@ -41,6 +41,9 @@ class Child(db.Model, SerializerMixin):
     parent = db.relationship("Parent", back_populates="children")
     lab_tests = db.relationship("LabTest", back_populates="child", lazy=True)
     records = db.relationship("Record", back_populates="child", lazy=True)
+    prescriptions = db.relationship(
+        "Prescription", back_populates="child", lazy=True
+    )  # New relationship
 
     @hybrid_property
     def parent_info(self):
@@ -59,15 +62,16 @@ class Child(db.Model, SerializerMixin):
 
 class Record(db.Model, SerializerMixin):
     __tablename__ = "vacination_records"
-    serialize_only=( "record_id",
+    serialize_only = (
+        "record_id",
         "parent_id",
         "vaccine_id",
         "provider_id",
-        "child_id", 
+        "child_id",
         "timestamp",
-        "info",)
+        "info",
+    )
     serialize_rules = (
-       
         "-vaccine",
         "-child",
         "-provider",
@@ -82,21 +86,19 @@ class Record(db.Model, SerializerMixin):
     provider_id = db.Column(
         db.String, db.ForeignKey("providers.provider_id"), nullable=False
     )
-    child_id = db.Column(
-        db.Integer, db.ForeignKey("children.child_id"), nullable=True  
-    )
+    child_id = db.Column(db.Integer, db.ForeignKey("children.child_id"), nullable=True)
     timestamp = db.Column(db.DateTime, nullable=False, default=current_eat_time)
 
     parent = db.relationship("Parent", back_populates="vaccination_records")
     vaccine = db.relationship("Vaccine", back_populates="vaccination_records")
     provider = db.relationship("Provider", back_populates="vaccination_records")
-    child = db.relationship("Child", back_populates="records") 
+    child = db.relationship("Child", back_populates="records")
 
     @hybrid_property
     def info(self):
         return {
             "parent": self.parent.name,
             "provider": self.provider.name,
-            "child":self.child.fullname,
+            "child": self.child.fullname,
             "vaccine": self.vaccine.name,
         }
