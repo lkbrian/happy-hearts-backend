@@ -8,10 +8,10 @@ import cloudinary
 import cloudinary.uploader
 import pytz
 
-# Configure Cloudinary
-cloudinary.config(
-    cloud_name="your-cloud-name", api_key="your-api-key", api_secret="your-api-secret"
-)
+# # Configure Cloudinary
+# cloudinary.config(
+#     cloud_name="your-cloud-name", api_key="your-api-key", api_secret="your-api-secret"
+# )
 
 EAT = pytz.timezone("Africa/Nairobi")
 
@@ -33,38 +33,12 @@ class DocumentAPI(Resource):
                 return make_response(jsonify({"msg": "Document not found"}), 404)
             return make_response(jsonify(document.to_dict()), 200)
 
-    def get_by_filename(self, filename):
-        document = Document.query.filter_by(fileName=filename).first()
-        if not document:
-            return make_response(
-                jsonify({"msg": "Document with that filename not found"}), 404
-            )
-        return make_response(jsonify(document.to_dict()), 200)
+
 
     # Fetch all documents for a specific user (either parent or provider)
-    def get_by_parent(self, user_id):
-        # Fetch documents for the parent or provider
-        documents = Document.query.filter((Document.parent_id == user_id)).all()
 
-        if not documents:
-            return make_response(
-                jsonify({"msg": "No documents found for this user"}), 404
-            )
 
-        document_list = [document.to_dict() for document in documents]
-        return make_response(jsonify(document_list), 200)
 
-    def get_by_provider(self, user_id):
-        # Fetch documents for the provider
-        documents = Document.query.filter((Document.provider_id == user_id)).all()
-
-        if not documents:
-            return make_response(
-                jsonify({"msg": "No documents found for this user"}), 404
-            )
-
-        document_list = [document.to_dict() for document in documents]
-        return make_response(jsonify(document_list), 200)
 
     def post(self):
         data = request.form  # Change to form if files are being uploaded
@@ -154,3 +128,39 @@ class DocumentAPI(Resource):
 
         except Exception as e:
             return make_response(jsonify({"msg": str(e)}), 500)
+
+class GetDocumentByProvider(Resource):
+    def get(self, user_id):
+        # Fetch documents for the provider
+        documents = Document.query.filter((Document.provider_id == user_id)).all()
+
+        if not documents:
+            return make_response(
+                jsonify({"msg": "No documents found for this user"}), 404
+            )
+
+        document_list = [document.to_dict() for document in documents]
+        return make_response(jsonify(document_list), 200)
+
+
+class GetDocumentName(Resource):
+    def get(self, filename):
+        document = Document.query.filter_by(fileName=filename).first()
+        if not document:
+            return make_response(
+                jsonify({"msg": "Document with that filename not found"}), 404
+            )
+        return make_response(jsonify(document.to_dict()), 200)
+
+
+class GetDocumentByParent(Resource):
+    def get(self, user_id):
+        documents = Document.query.filter((Document.parent_id == user_id)).all()
+
+        if not documents:
+            return make_response(
+                jsonify({"msg": "No documents found for this user"}), 404
+            )
+
+        document_list = [document.to_dict() for document in documents]
+        return make_response(jsonify(document_list), 200)

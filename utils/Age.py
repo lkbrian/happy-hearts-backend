@@ -4,9 +4,9 @@ from datetime import date, datetime
 def calculate_age(Date_Of_birth):
     # Parse the date string to a date object
     try:
-        birth_date = datetime.strptime(Date_Of_birth, "%Y/%m/%d").date()
+        birth_date = datetime.strptime(Date_Of_birth, "%Y-%m-%d").date()
     except ValueError:
-        print("\033[91m Invalid date format. Use YYYY/MM/DD. \033[0m")
+        print("\033[91m Invalid date format. Use YYYY-MM-DD. \033[0m")
         return
 
     if birth_date < date.today():

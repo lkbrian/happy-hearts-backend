@@ -22,9 +22,16 @@ class Child(db.Model, SerializerMixin):
         "age",
         "gender",
         "passport",
-        "parent_info",
+        "prescriptions",
+        "records",
+        "lab_tests",
     )
-    serialize_rules = ("-parent_id",)
+    serialize_rules = (
+        "-parent_id",
+        "-prescriptions.child",
+        "-records.child",
+        "-lab_tests.child",
+    )
     child_id = db.Column(db.Integer, primary_key=True)
     fullname = db.Column(db.String, nullable=False)
     certificate_No = db.Column(db.Integer, unique=True, nullable=False)
@@ -45,19 +52,19 @@ class Child(db.Model, SerializerMixin):
         "Prescription", back_populates="child", lazy=True
     )  # New relationship
 
-    @hybrid_property
-    def parent_info(self):
-        return {
-            "parent_id": self.parent.parent_id,
-            "name": self.parent.name,
-            "email": self.parent.email,
-            "role": self.parent.role,
-            "national_id": self.parent.national_id,
-            "phone_number": self.parent.phone_number,
-            "gender": self.parent.gender,
-            "passport": self.parent.passport,
-            "timestamp": self.parent.timestamp,
-        }
+    # @hybrid_property
+    # def info(self):
+    #     return {
+    #         # "parent_id": self.parent.parent_id,
+    #         # "name": self.parent.name,
+    #         # "email": self.parent.email,
+    #         # "role": self.parent.role,
+    #         # "national_id": self.parent.national_id,
+    #         # "phone_number": self.parent.phone_number,
+    #         # "gender": self.parent.gender,
+    #         # "passport": self.parent.passport,
+    #         # "timestamp": self.parent.timestamp,
+    #     }
 
 
 class Record(db.Model, SerializerMixin):

@@ -19,7 +19,7 @@ from models import (
 from config import api, app, scheduler
 from routes.appointmentsAPI import appointmentsAPI
 from routes.authAPI import Home, Login, Logout
-from routes.childrenAPI import ChildrenAPI
+from routes.childrenAPI import ChildrenAPI, ChildByParentIdAPI
 from routes.parentsAPI import parentsAPI
 from routes.providersAPI import providersAPI
 from routes.usersAPI import UserAPI
@@ -40,7 +40,10 @@ from utils.customs import update_appointment_statuses
 
 api.add_resource(Home, "/")
 api.add_resource(UserAPI, "/users", "/users/<int:id>")
-api.add_resource(ChildrenAPI, "/children", "/children/<int:id>")
+api.add_resource(ChildrenAPI, "/children", "/children/<int:id>", endpoint="get")
+api.add_resource(
+    ChildByParentIdAPI, "/children/getbyparentid/<int:id>", methods=["GET"]
+)
 api.add_resource(parentsAPI, "/parents", "/parents/<int:id>")
 api.add_resource(providersAPI, "/providers", "/providers/<int:id>")
 api.add_resource(appointmentsAPI, "/appointments", "/appointments/<int:id>")
