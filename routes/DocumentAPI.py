@@ -1,5 +1,6 @@
 from flask import jsonify, make_response, request
 from flask_restful import Resource
+from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from config import db
 from models import Document
@@ -33,12 +34,7 @@ class DocumentAPI(Resource):
                 return make_response(jsonify({"msg": "Document not found"}), 404)
             return make_response(jsonify(document.to_dict()), 200)
 
-
-
     # Fetch all documents for a specific user (either parent or provider)
-
-
-
 
     def post(self):
         data = request.form  # Change to form if files are being uploaded
@@ -79,9 +75,10 @@ class DocumentAPI(Resource):
                 201,
             )
 
-        except IntegrityError:
+        except IntegrityError as e:
             db.session.rollback()
-            return make_response(jsonify({"msg": "Integrity constraint failed"}), 400)
+            error_message = str(e.orig)
+            return make_response(jsonify({"msg": f" {error_message}"}), 400)
         except Exception as e:
             return make_response(jsonify({"msg": str(e)}), 500)
 
@@ -105,9 +102,10 @@ class DocumentAPI(Resource):
                 200,
             )
 
-        except IntegrityError:
+        except IntegrityError as e:
             db.session.rollback()
-            return make_response(jsonify({"msg": "Integrity constraint failed"}), 400)
+            error_message = str(e.orig)
+            return make_response(jsonify({"msg": f" {error_message}"}), 400)
         except Exception as e:
             return make_response(jsonify({"msg": str(e)}), 500)
 
@@ -128,6 +126,7 @@ class DocumentAPI(Resource):
 
         except Exception as e:
             return make_response(jsonify({"msg": str(e)}), 500)
+
 
 class GetDocumentByProvider(Resource):
     def get(self, user_id):
@@ -163,4 +162,24 @@ class GetDocumentByParent(Resource):
             )
 
         document_list = [document.to_dict() for document in documents]
+        return make_response(jsonify(document_list), 200)
+
+
+class GetDocumentsByParentAndChild(Resource):
+    def get(self, parent_id, child_id):
+        documents = Document.query.filter(
+            and_(Document.parent_id == parent_id, Document.child_id == child_id)
+        ).all()
+        return make_response(jsonify(documents.to_dict()), 200)
+
+
+class GetDocumentForChildByParent(Resource):
+    def get(self, parent_id, child_id):
+        documents = (
+            Document.query.filter(Document.parent_id == parent_id)
+            .filter(Document.child_id == child_id)
+            .all()
+        )
+        document_list = [document.to_dict() for document in documents]
+
         return make_response(jsonify(document_list), 200)

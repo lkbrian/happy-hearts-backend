@@ -51,9 +51,10 @@ class providersAPI(Resource):
 
             return make_response(jsonify({"msg": "Provider created successfully"}), 201)
 
-        except IntegrityError:
+        except IntegrityError as e:
             db.session.rollback()
-            return make_response(jsonify({"msg": "Integrity constraint failed"}), 400)
+            error_message = str(e.orig)
+            return make_response(jsonify({"msg": f" {error_message}"}), 400)
 
         except Exception as e:
             return make_response(jsonify({"msg": str(e)}), 500)

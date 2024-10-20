@@ -26,6 +26,9 @@ class Provider(db.Model, SerializerMixin):
         "passport",
         "appointments",
         "prescriptions",
+        "vaccination_records",
+        "discharge_summaries",
+        "deliveries",
     )
     serialize_rules = (
         "-password_hash",
@@ -33,6 +36,10 @@ class Provider(db.Model, SerializerMixin):
         "-vaccination_records.provider",
         "-vaccination_records.child",
         "-prescriptions.provider",
+        "-medications.provider",
+        "-deliveries.provider",
+        "-discharge_summaries.provider",
+        "-admissions.provider",
         "-appointments.provider.info",
     )
 
@@ -56,7 +63,10 @@ class Provider(db.Model, SerializerMixin):
     )
 
     discharge_summaries = db.relationship(
-        "Discharge_summary", back_populates="provider"
+        "Discharge_summary", back_populates="provider", cascade="all, delete-orphan"
+    )
+    admissions = db.relationship(
+        "Admission", back_populates="provider", cascade="all, delete-orphan"
     )
 
     appointments = db.relationship(
@@ -69,12 +79,16 @@ class Provider(db.Model, SerializerMixin):
     medications = db.relationship(
         "Medications", back_populates="provider", cascade="all, delete-orphan"
     )
+    lab_tests = db.relationship("LabTest", back_populates="provider", lazy=True)
 
     reset_tokens = db.relationship("ResetToken", back_populates="provider")
     prescriptions = db.relationship(
         "Prescription", back_populates="provider", lazy=True
     )
     documents = db.relationship("Document", back_populates="provider", lazy=True)
+    discharge_summaries = db.relationship(
+        "Discharge_summary", back_populates="provider"
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

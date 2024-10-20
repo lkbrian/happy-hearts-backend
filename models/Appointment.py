@@ -20,7 +20,13 @@ class Appointment(db.Model, SerializerMixin):
         "timestamp",
         "info.provider_name",
         "reason",
-        "status",  # Add status to serialized fields
+        "status",
+        "parent.name",  # Add status to serialized fields
+        "parent.email",  # Add status to serialized fields
+        "parent.national_id",  # Add status to serialized fields
+        "parent_id",  # Add status to serialized fields
+        "provider_id",  # Add status to serialized fields
+        "provider.email",  # Add status to serialized fields
     )
     serialize_rules = (
         "-parent.appointments",

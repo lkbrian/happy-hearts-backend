@@ -1,6 +1,6 @@
 from flask_restful import Resource
 from flask import request, jsonify, make_response
-from models import Medications,Parent,Provider
+from models import Medications, Parent, Provider
 from config import db
 from sqlalchemy.exc import IntegrityError
 
@@ -87,9 +87,10 @@ class MedicationsAPI(Resource):
                 jsonify({"msg": "Medication updated successfully"}), 200
             )
 
-        except IntegrityError:
+        except IntegrityError as e:
             db.session.rollback()
-            return make_response(jsonify({"msg": "Integrity constraint failed"}), 400)
+            error_message = str(e.orig)
+            return make_response(jsonify({"msg": f" {error_message}"}), 400)
 
         except Exception as e:
             return make_response(jsonify({"msg": str(e)}), 500)

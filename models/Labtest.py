@@ -22,11 +22,10 @@ class LabTest(db.Model, SerializerMixin):
         "timestamp",
         "parent_id",
         "child_id",
+        "parent.national_id",
+        "child.certificate_No",
     )
-    serialize_rules = (
-        "-parent.lab_tests",
-        "-child.lab_tests"
-    )
+    serialize_rules = ("-parent.lab_tests", "-child.lab_tests")
     lab_test_id = db.Column(db.Integer, primary_key=True)
     test_name = db.Column(db.String(255), nullable=False)
     test_date = db.Column(db.Date, nullable=False)
@@ -37,6 +36,10 @@ class LabTest(db.Model, SerializerMixin):
     # Foreign key to either parent or child
     parent_id = db.Column(db.Integer, db.ForeignKey("parents.parent_id"), nullable=True)
     child_id = db.Column(db.Integer, db.ForeignKey("children.child_id"), nullable=True)
+    provider_id = db.Column(
+        db.Integer, db.ForeignKey("providers.provider_id"), nullable=True
+    )
 
     parent = db.relationship("Parent", back_populates="lab_tests", lazy=True)
     child = db.relationship("Child", back_populates="lab_tests", lazy=True)
+    provider = db.relationship("Provider", back_populates="lab_tests", lazy=True)

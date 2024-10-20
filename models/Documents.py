@@ -13,6 +13,17 @@ def current_eat_time():
 
 class Document(db.Model, SerializerMixin):
     __tablename__ = "documents"
+    serialize_only = (
+        "document_id",
+        "entityType",
+        "documentType",
+        "fileName",
+        "url",
+        "parent_id",
+        "provider_id",
+        "child_id",
+        "timestamp",
+    )
     document_id = db.Column(db.Integer, primary_key=True)
     entityType = db.Column(db.String, nullable=False)
     documentType = db.Column(db.String, nullable=False)
@@ -25,6 +36,7 @@ class Document(db.Model, SerializerMixin):
     provider_id = db.Column(
         db.Integer, db.ForeignKey("providers.provider_id"), nullable=True
     )
+    child_id = db.Column(db.Integer, db.ForeignKey("children.child_id"), nullable=True)
     timestamp = db.Column(db.DateTime, nullable=False, default=current_eat_time)
     parent = db.relationship("Parent", back_populates="documents", lazy=True)
 

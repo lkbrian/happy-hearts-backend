@@ -1,8 +1,11 @@
-from config import db
-from sqlalchemy_serializer import SerializerMixin
 from datetime import datetime
-from sqlalchemy.ext.hybrid import hybrid_property
+
 import pytz
+
+# from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy_serializer import SerializerMixin
+
+from config import db
 
 EAT = pytz.timezone("Africa/Nairobi")
 
@@ -21,7 +24,6 @@ class Child(db.Model, SerializerMixin):
         "date_of_birth",
         "age",
         "gender",
-        "passport",
         "prescriptions",
         "records",
         "lab_tests",
@@ -31,6 +33,8 @@ class Child(db.Model, SerializerMixin):
         "-prescriptions.child",
         "-records.child",
         "-lab_tests.child",
+        "-discharge_summaries.child",
+        "-admissions.child",
     )
     child_id = db.Column(db.Integer, primary_key=True)
     fullname = db.Column(db.String, nullable=False)
@@ -38,18 +42,26 @@ class Child(db.Model, SerializerMixin):
     date_of_birth = db.Column(db.DateTime, nullable=False)
     age = db.Column(db.String, nullable=True)
     gender = db.Column(db.String, nullable=False)
-    passport = db.Column(db.String, nullable=False)
     parent_id = db.Column(
         db.Integer, db.ForeignKey("parents.parent_id"), nullable=False
     )
 
     timestamp = db.Column(db.DateTime, nullable=False, default=current_eat_time)
-
+    discharge_summaries = db.relationship(
+        "Discharge_summary", back_populates="child", cascade="all, delete-orphan"
+    )
+    admissions = db.relationship(
+        "Admission", back_populates="child", cascade="all, delete-orphan"
+    )
     parent = db.relationship("Parent", back_populates="children")
-    lab_tests = db.relationship("LabTest", back_populates="child", lazy=True)
-    records = db.relationship("Record", back_populates="child", lazy=True)
+    lab_tests = db.relationship(
+        "LabTest", back_populates="child", cascade="all, delete-orphan", lazy=True
+    )
+    records = db.relationship(
+        "Record", back_populates="child", lazy=True, cascade="all, delete-orphan"
+    )
     prescriptions = db.relationship(
-        "Prescription", back_populates="child", lazy=True
+        "Prescription", back_populates="child", lazy=True, cascade="all, delete-orphan"
     )  # New relationship
 
     # @hybrid_property
@@ -76,7 +88,7 @@ class Record(db.Model, SerializerMixin):
         "provider_id",
         "child_id",
         "timestamp",
-        "info",
+        # "info",
     )
     serialize_rules = (
         "-vaccine",
@@ -101,11 +113,11 @@ class Record(db.Model, SerializerMixin):
     provider = db.relationship("Provider", back_populates="vaccination_records")
     child = db.relationship("Child", back_populates="records")
 
-    @hybrid_property
-    def info(self):
-        return {
-            "parent": self.parent.name,
-            "provider": self.provider.name,
-            "child": self.child.fullname,
-            "vaccine": self.vaccine.name,
-        }
+    # @hybrid_property
+    # def info(self):
+    #     return {
+    #         "parent": self.parent.name,
+    #         "provider": self.provider.name,
+    #         "child": self.child.fullname,
+    #         "vaccine": self.vaccine.name,
+    #     }

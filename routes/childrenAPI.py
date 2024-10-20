@@ -36,6 +36,14 @@ class ChildrenAPI(Resource):
         dob = datetime.strptime(data["date_of_birth"], "%Y-%m-%d").date()
         if dob > date.today():
             return make_response(jsonify({"msg": "Enter a past date or today"}), 400)
+        existing_child = Child.query.filter_by(
+            certificate_No=data.get("certificate_No")
+        ).first()
+        if existing_child:
+            print("Existing child found:", existing_child)
+            return make_response(
+                jsonify({"msg": "Child with that certificate number exists"}), 404
+            )
         parent = Parent.query.get(data.get("parent_id"))
         if not parent:
             return make_response(jsonify({"msg": "Parent not found"}), 404)
@@ -50,11 +58,10 @@ class ChildrenAPI(Resource):
                 date_of_birth=dob,
                 age=age,
                 gender=data.get("gender"),
-                passport=upload_result["secure_url"],  # Cloudinary link
                 parent_id=data.get("parent_id"),
             )
-
-            # Create the document record for the uploaded passport
+            db.session.add(child)
+            db.session.commit()
             document = Document(
                 entityType="child_passport",  # Assuming document type for child passport
                 documentType=upload_result["format"],  # e.g., jpg, png
@@ -64,11 +71,12 @@ class ChildrenAPI(Resource):
                 parent_id=data.get(
                     "parent_id"
                 ),  # Assuming the document also belongs to the parent
+                child_id=child.child_id,
             )
-            db.session.add(child)
             db.session.add(document)
             # print(upload_result)
             db.session.commit()
+            return make_response(jsonify({"msg": "Child created successfully!"}), 200)
         except IntegrityError as err:
             db.session.rollback()
             response = make_response(

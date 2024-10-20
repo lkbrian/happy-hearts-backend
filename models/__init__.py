@@ -8,6 +8,7 @@ from .Parent import (
     Discharge_summary,
     Present_pregnancy,
     Previous_pregnancy,
+    Admission,
 )
 from .Payment import Payment
 from .Provider import Provider
@@ -18,3 +19,4 @@ from .Labtest import LabTest
 from .Medicine import Medicine
 from .Prescription import Prescription
 from .Documents import Document
+from .Facilities import Bed, Room

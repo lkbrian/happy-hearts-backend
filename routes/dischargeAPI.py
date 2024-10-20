@@ -1,6 +1,6 @@
 from flask import jsonify, make_response, request
 from flask_restful import Resource
-from models import Discharge_summary,Parent,Provider
+from models import Discharge_summary, Parent, Provider, Admission
 from config import db
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
@@ -24,22 +24,30 @@ class DischargeSummaryAPI(Resource):
         if not data:
             return make_response(jsonify({"msg": "No input provided"}), 400)
 
-        national_id = data.get("national_id")
+        admission_id = data.get("admission_id")
         parent_id = data.get("parent_id")
 
-        parent = Parent.query.filter_by(national_id=national_id).first() or Parent.query.filter_by(parent_id=parent_id).first()
+        admission = Admission.query.get(admission_id)
+        parent = Parent.query.filter_by(parent_id=parent_id).first()
 
         provider = Provider.query.get(data.get("provider_id"))
+
+        if not admission:
+            return make_response(jsonify({"msg": "Admission not found"}), 404)
 
         if not parent:
             return make_response(jsonify({"msg": "Parent not found"}), 404)
 
         if not provider:
             return make_response(jsonify({"msg": "Provider not found"}), 404)
+
         try:
             summary = Discharge_summary(
-                admission_date=datetime.strptime(data["admission_date"], "%Y-%m-%d %H:%M"),
-                discharge_date=datetime.strptime(data["discharge_date"], "%Y-%m-%d %H:%M"),
+                admission_id=admission.admission_id,
+                admission_date=admission.admission_date,
+                discharge_date=datetime.strptime(
+                    data["discharge_date"], "%Y-%m-%d %H:%M"
+                ),
                 discharge_diagnosis=data["discharge_diagnosis"],
                 procedure=data.get("procedure"),
                 parent_id=parent.parent_id,
@@ -52,9 +60,10 @@ class DischargeSummaryAPI(Resource):
                 jsonify({"msg": "Discharge summary created successfully"}), 201
             )
 
-        except IntegrityError:
+        except IntegrityError as e:
             db.session.rollback()
-            return make_response(jsonify({"msg": "Integrity constraint failed"}), 400)
+            error_message = str(e.orig)
+            return make_response(jsonify({"msg": f" {error_message}"}), 400)
 
         except Exception as e:
             return make_response(jsonify({"msg": str(e)}), 500)
@@ -70,7 +79,6 @@ class DischargeSummaryAPI(Resource):
 
         try:
             for field, value in data.items():
-
                 if field == "parent_id":
                     parent = Parent.query.get(value)
                     if not parent:
@@ -79,17 +87,22 @@ class DischargeSummaryAPI(Resource):
                 elif field == "provider_id":
                     provider = Provider.query.get(value)
                     if not provider:
-                        return make_response(jsonify({"msg": "Provider not found"}), 404)                
+                        return make_response(
+                            jsonify({"msg": "Provider not found"}), 404
+                        )
+
                 if hasattr(summary, field):
                     setattr(summary, field, value)
+
             db.session.commit()
             return make_response(
                 jsonify({"msg": "Discharge summary updated successfully"}), 200
             )
 
-        except IntegrityError:
+        except IntegrityError as e:
             db.session.rollback()
-            return make_response(jsonify({"msg": "Integrity constraint failed"}), 400)
+            error_message = str(e.orig)
+            return make_response(jsonify({"msg": f" {error_message}"}), 400)
 
         except Exception as e:
             return make_response(jsonify({"msg": str(e)}), 500)

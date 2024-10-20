@@ -62,6 +62,7 @@ class Parent(db.Model, SerializerMixin):
         "-lab_tests.parent",
         "-prescriptions.parent",
         "-documents.parent",
+        "-admissions.parent",
     )
 
     parent_id = db.Column(db.Integer, primary_key=True)
@@ -120,7 +121,12 @@ class Parent(db.Model, SerializerMixin):
     )
     documents = db.relationship("Document", back_populates="parent", lazy=True)
 
-    discharge_summaries = db.relationship("Discharge_summary", back_populates="parent")
+    admissions = db.relationship(
+        "Admission", back_populates="parent", cascade="all, delete-orphan"
+    )
+    discharge_summaries = db.relationship(
+        "Discharge_summary", back_populates="parent", cascade="all, delete-orphan"
+    )
     reset_tokens = db.relationship("ResetToken", back_populates="parent")
     lab_tests = db.relationship("LabTest", back_populates="parent", lazy=True)
     prescriptions = db.relationship("Prescription", back_populates="parent", lazy=True)
@@ -142,9 +148,11 @@ class Delivery(db.Model, SerializerMixin):
         "duration_of_labour",
         "condition_of_mother",
         "condition_of_baby",
+        "weight_at_birth",
         "gender",
         "provider_id",
         "parent_id",
+        "parent.national_id",
     )
     serialize_rules = ("-provider.deliveries", "-parent.delivery")
 
@@ -154,7 +162,7 @@ class Delivery(db.Model, SerializerMixin):
     duration_of_labour = db.Column(db.String, nullable=False)
     condition_of_mother = db.Column(db.String, nullable=False)
     condition_of_baby = db.Column(db.String, nullable=False)
-    birth_weight_at_birth = db.Column(db.String, nullable=False)
+    weight_at_birth = db.Column(db.String, nullable=False)
     gender = db.Column(db.String, nullable=False)
     provider_id = db.Column(db.Integer, db.ForeignKey("providers.provider_id"))
 
@@ -166,23 +174,75 @@ class Delivery(db.Model, SerializerMixin):
     parent = db.relationship("Parent", back_populates="delivery")
 
 
+class Admission(db.Model, SerializerMixin):
+    __tablename__ = "admissions"
+
+    serialize_only = (
+        "admission_id",
+        "admission_date",
+        "parent_id",
+        "child_id",
+        "reason_for_admission",
+        "general_assessment",
+        "initial_treatment_plan",
+        "room_id",
+        "bed_id",
+        "insurance_details",
+        "provider.name",
+        "timestamp",
+    )
+    serialize_rules = (
+        "-parent.admissions",
+        "-child.admissions",
+    )
+
+    admission_id = db.Column(db.Integer, primary_key=True)
+    admission_date = db.Column(db.DateTime, nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey("parents.parent_id"))
+    provider_id = db.Column(db.Integer, db.ForeignKey("providers.provider_id"))
+    child_id = db.Column(db.Integer, db.ForeignKey("children.child_id"), nullable=True)
+    reason_for_admission = db.Column(db.String, nullable=False)
+    general_assessment = db.Column(db.String, nullable=True)
+    initial_treatment_plan = db.Column(db.String, nullable=True)
+    insurance_details = db.Column(db.String, nullable=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("rooms.room_id"), nullable=False)
+    bed_id = db.Column(db.Integer, db.ForeignKey("beds.bed_id"), nullable=False)
+    # Existing relationships...
+
+    bed = db.relationship("Bed", back_populates="admission")
+    timestamp = db.Column(db.DateTime, nullable=False, default=current_eat_time)
+
+    room = db.relationship("Room", back_populates="admissions")
+    parent = db.relationship("Parent", back_populates="admissions")
+    provider = db.relationship("Provider", back_populates="admissions")
+    child = db.relationship("Child", back_populates="admissions")
+
+
 class Discharge_summary(db.Model, SerializerMixin):
     __tablename__ = "discharge_summaries"
+
     serialize_only = (
         "discharge_id",
+        "admission_id",  # Added to link to Admission
         "admission_date",
         "discharge_date",
         "discharge_diagnosis",
         "procedure",
         "parent_id",
+        "child_id",
         "provider_id",
-        "timestamp",
+        "provider.name" "timestamp",
     )
     serialize_rules = (
         "-provider.discharge_summaries",
         "-parent.discharge_summaries",
+        "-child.discharge_summaries",
     )
+
     discharge_id = db.Column(db.Integer, primary_key=True)
+    admission_id = db.Column(
+        db.Integer, db.ForeignKey("admissions.admission_id"), nullable=False
+    )  # Link to Admission
     admission_date = db.Column(db.DateTime, nullable=False)
     discharge_date = db.Column(db.DateTime, nullable=False)
     discharge_diagnosis = db.Column(db.String, nullable=False)
@@ -190,12 +250,13 @@ class Discharge_summary(db.Model, SerializerMixin):
     timestamp = db.Column(db.DateTime, nullable=False, default=current_eat_time)
 
     provider_id = db.Column(db.Integer, db.ForeignKey("providers.provider_id"))
-
     provider = db.relationship("Provider", back_populates="discharge_summaries")
 
     parent_id = db.Column(db.Integer, db.ForeignKey("parents.parent_id"))
-
     parent = db.relationship("Parent", back_populates="discharge_summaries")
+
+    child_id = db.Column(db.Integer, db.ForeignKey("children.child_id"), nullable=True)
+    child = db.relationship("Child", back_populates="discharge_summaries")
 
 
 class Medical_info_parent(db.Model, SerializerMixin):
