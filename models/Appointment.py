@@ -7,7 +7,6 @@ import pytz
 EAT = pytz.timezone("Africa/Nairobi")
 
 
-# Function to return the current time in EAT
 def current_eat_time():
     return datetime.now(EAT)
 
@@ -21,12 +20,12 @@ class Appointment(db.Model, SerializerMixin):
         "info.provider_name",
         "reason",
         "status",
-        "parent.name",  # Add status to serialized fields
-        "parent.email",  # Add status to serialized fields
-        "parent.national_id",  # Add status to serialized fields
-        "parent_id",  # Add status to serialized fields
-        "provider_id",  # Add status to serialized fields
-        "provider.email",  # Add status to serialized fields
+        "parent.name",
+        "parent.email",
+        "parent.national_id",
+        "parent_id",
+        "provider_id",
+        "provider.email",
     )
     serialize_rules = (
         "-parent.appointments",

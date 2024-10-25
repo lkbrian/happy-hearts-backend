@@ -198,3 +198,33 @@ class PrescriptionAPI(Resource):
 
         except Exception as e:
             return make_response(jsonify({"msg": str(e)}), 500)
+
+
+class PrescriptionForParent(Resource):
+    def get(self, id):
+        prescription = [
+            p.to_dict() for p in Prescription.query.filter_by(parent_id=id).all()
+        ]
+        if prescription:
+            response = make_response(jsonify(prescription), 200)
+            return response
+
+
+class PrescriptionForProvider(Resource):
+    def get(self, id):
+        prescription = [
+            p.to_dict() for p in Prescription.query.filter_by(provider_id=id).all()
+        ]
+        if prescription:
+            response = make_response(jsonify(prescription), 200)
+            return response
+
+
+class PrescriptionForChild(Resource):
+    def get(self, id):
+        prescription = [
+            p.to_dict() for p in Prescription.query.filter_by(child_id=id).all()
+        ]
+        if prescription:
+            response = make_response(jsonify(prescription), 200)
+            return response

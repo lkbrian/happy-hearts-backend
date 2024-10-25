@@ -27,7 +27,7 @@ class User(db.Model, SerializerMixin):
     name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(70), nullable=False, unique=True)
     role = db.Column(
-        Enum(*valid_roles),
+        db.String,
         nullable=False,
     )
     password_hash = db.Column(db.String, nullable=False)
@@ -35,26 +35,8 @@ class User(db.Model, SerializerMixin):
 
     reset_tokens = db.relationship("ResetToken", back_populates="user")
 
-    __mapper_args__ = {"polymorphic_on": role}
-
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
-
-class Admin(User):
-    __mapper_args__ = {"polymorphic_identity": "admin"}
-
-
-class ReceptionDesk(User):
-    __mapper_args__ = {"polymorphic_identity": "reception_desk"}
-
-
-class AccountsDesk(User):
-    __mapper_args__ = {"polymorphic_identity": "accounts_desk"}
-
-
-class Accounts(User):
-    __mapper_args__ = {"polymorphic_identity": "accounts"}

@@ -4,6 +4,8 @@ from models import Admission, Parent, Child, Provider, Room, Bed
 from config import db
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
+from utils.customs import role_required
+from flask_jwt_extended import jwt_required
 
 
 class AdmissionAPI(Resource):
@@ -17,7 +19,10 @@ class AdmissionAPI(Resource):
                 return make_response(jsonify({"msg": "Admission not found"}), 404)
             return make_response(jsonify(admission.to_dict()), 200)
 
+    @jwt_required()
+    @role_required(["admin", "provider"])
     def post(self):
+
         data = request.json
         if not data:
             return make_response(jsonify({"msg": "No input provided"}), 400)
@@ -89,7 +94,9 @@ class AdmissionAPI(Resource):
             room.is_occupied = room.current_occupancy > 0
             bed.is_occupied = True
             room.status = (
-                "Full" if room.current_occupancy == room.capacity else "Available"
+                "Full"
+                if room.current_occupancy == room.current_bed_occupancy
+                else "Available"
             )
 
             db.session.commit()
@@ -151,3 +158,23 @@ class AdmissionAPI(Resource):
         db.session.commit()
 
         return make_response(jsonify({"msg": "Admission deleted successfully"}), 200)
+
+
+class AdmissionForParent(Resource):
+    def get(self, id):
+        admissions = [
+            a.to_dict() for a in Admission.query.filter_by(parent_id=id).all()
+        ]
+        if admissions:
+            response = make_response(jsonify(admissions), 200)
+            return response
+
+
+class AdmissionForProvider(Resource):
+    def get(self, id):
+        admissions = [
+            a.to_dict() for a in Admission.query.filter_by(provider_id=id).all()
+        ]
+        if admissions:
+            response = make_response(jsonify(admissions), 200)
+            return response

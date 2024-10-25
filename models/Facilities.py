@@ -18,7 +18,14 @@ def current_eat_time():
 class Bed(db.Model, SerializerMixin):
     __tablename__ = "beds"
 
-    serialize_only = ("bed_id", "bed_number", "is_occupied", "room_id", "bed_type")
+    serialize_only = (
+        "bed_id",
+        "bed_number",
+        "is_occupied",
+        "room_id",
+        "bed_type",
+        "room.room_number",
+    )
     serialize_rules = ("-room.beds", "-admission.bed")
 
     bed_id = db.Column(db.Integer, primary_key=True)
@@ -34,7 +41,16 @@ class Bed(db.Model, SerializerMixin):
 class Room(db.Model, SerializerMixin):
     __tablename__ = "rooms"
 
-    serialize_only = ("room_id", "room_number", "is_occupied", "room_type")
+    serialize_only = (
+        "room_id",
+        "room_number",
+        "is_occupied",
+        "room_type",
+        "status",
+        "location",
+        "facilities",
+        "notes",
+    )
     serialize_rules = ("-admissions.room",)
 
     room_id = db.Column(db.Integer, primary_key=True)

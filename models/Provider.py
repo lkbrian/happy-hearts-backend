@@ -23,12 +23,6 @@ class Provider(db.Model, SerializerMixin):
         "national_id",
         "phone_number",
         "gender",
-        "passport",
-        "appointments",
-        "prescriptions",
-        "vaccination_records",
-        "discharge_summaries",
-        "deliveries",
     )
     serialize_rules = (
         "-password_hash",
@@ -50,11 +44,7 @@ class Provider(db.Model, SerializerMixin):
     national_id = db.Column(db.Integer, unique=True, nullable=False)
     phone_number = db.Column(db.Integer, nullable=False, unique=True)
     gender = db.Column(db.String, nullable=False)
-    passport = db.Column(
-        db.String,
-        nullable=False,
-        default="https://res.cloudinary.com/dg6digtc4/image/upload/w_1000,c_fill,ar_1:1,g_auto,r_max,bo_5px_solid_red,b_rgb:262c35/v1722952459/profile_xkjsxh.jpg",
-    )
+
     password_hash = db.Column(db.String, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False, default=current_eat_time)
 

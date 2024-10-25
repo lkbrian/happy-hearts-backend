@@ -174,18 +174,14 @@ class LabTestsForParents(Resource):
         if labtests:
             response = make_response(jsonify(labtests), 200)
             return response
-        else:
-            return make_response(jsonify({"msg": "Parent has no labtests"}), 404)
 
 
 class LabTestsForProviders(Resource):
     def get(self, id):
-        labtests = [a.to_dict() for a in LabTest.query.filter_by(providers_id=id).all()]
+        labtests = [a.to_dict() for a in LabTest.query.filter_by(provider_id=id).all()]
         if labtests:
             response = make_response(jsonify(labtests), 200)
             return response
-        else:
-            return make_response(jsonify({"msg": "Providers has no labtests"}), 404)
 
 
 class LabTestsForChild(Resource):
@@ -194,5 +190,3 @@ class LabTestsForChild(Resource):
         if labtests:
             response = make_response(jsonify(labtests), 200)
             return response
-        else:
-            return make_response(jsonify({"msg": "Child has no labtests"}), 404)

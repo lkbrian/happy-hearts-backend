@@ -43,6 +43,12 @@ class BedAPI(Resource):
             db.session.add(bed)
             room.current_bed_occupancy += 1
             db.session.commit()
+            room.status = (
+                "Full"
+                if room.current_occupancy == room.current_bed_occupancy
+                else "Available"
+            )
+            db.session.commit()
 
             return make_response(jsonify({"msg": "Bed created successfully"}), 201)
 

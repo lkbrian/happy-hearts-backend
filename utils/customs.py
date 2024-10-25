@@ -10,6 +10,9 @@ import os
 from flask import make_response, jsonify
 from flask_mail import Message
 from venv import logger
+from functools import wraps
+from flask_jwt_extended import verify_jwt_in_request, get_jwt
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -96,6 +99,27 @@ def update_appointment_statuses():
                 jsonify({"error": "An error occurred while updating the appointments"}),
                 500,
             )
+
+
+def role_required(required_roles):
+    def wrapper(fn):
+        @wraps(fn)
+        def decorator(*args, **kwargs):
+            verify_jwt_in_request()
+            claims = get_jwt()
+            if claims["role"] not in required_roles:
+                required_roles_str = ", ".join(required_roles)
+                return make_response(
+                    jsonify(
+                        {"msg": f"Access forbidden: Requires {required_roles_str}"}
+                    ),
+                    403,
+                )
+            return fn(*args, **kwargs)
+
+        return decorator
+
+    return wrapper
 
 
 class JSONEncodedList(TypeDecorator):

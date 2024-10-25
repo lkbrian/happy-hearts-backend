@@ -21,6 +21,7 @@ class LabTest(db.Model, SerializerMixin):
         "remarks",
         "timestamp",
         "parent_id",
+        "provider_id",
         "child_id",
         "parent.national_id",
         "child.certificate_No",

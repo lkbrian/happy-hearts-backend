@@ -128,10 +128,10 @@ class DocumentAPI(Resource):
             return make_response(jsonify({"msg": str(e)}), 500)
 
 
-class GetDocumentByProvider(Resource):
-    def get(self, user_id):
+class DocumentByProvider(Resource):
+    def get(self, id):
         # Fetch documents for the provider
-        documents = Document.query.filter((Document.provider_id == user_id)).all()
+        documents = Document.query.filter((Document.provider_id == id)).all()
 
         if not documents:
             return make_response(
@@ -142,7 +142,7 @@ class GetDocumentByProvider(Resource):
         return make_response(jsonify(document_list), 200)
 
 
-class GetDocumentName(Resource):
+class DocumentName(Resource):
     def get(self, filename):
         document = Document.query.filter_by(fileName=filename).first()
         if not document:
@@ -152,9 +152,9 @@ class GetDocumentName(Resource):
         return make_response(jsonify(document.to_dict()), 200)
 
 
-class GetDocumentByParent(Resource):
-    def get(self, user_id):
-        documents = Document.query.filter((Document.parent_id == user_id)).all()
+class DocumentByParent(Resource):
+    def get(self, id):
+        documents = Document.query.filter((Document.parent_id == id)).all()
 
         if not documents:
             return make_response(
@@ -165,7 +165,7 @@ class GetDocumentByParent(Resource):
         return make_response(jsonify(document_list), 200)
 
 
-class GetDocumentsByParentAndChild(Resource):
+class DocumentsByParentAndChild(Resource):
     def get(self, parent_id, child_id):
         documents = Document.query.filter(
             and_(Document.parent_id == parent_id, Document.child_id == child_id)
@@ -173,11 +173,14 @@ class GetDocumentsByParentAndChild(Resource):
         return make_response(jsonify(documents.to_dict()), 200)
 
 
-class GetDocumentForChildByParent(Resource):
-    def get(self, parent_id, child_id):
+class DocumentByParentOnly(Resource):
+    def get(
+        self,
+        parent_id,
+    ):
         documents = (
             Document.query.filter(Document.parent_id == parent_id)
-            .filter(Document.child_id == child_id)
+            .filter(Document.child_id is None)
             .all()
         )
         document_list = [document.to_dict() for document in documents]

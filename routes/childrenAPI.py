@@ -136,14 +136,7 @@ class ChildrenAPI(Resource):
 
 class ChildByParentIdAPI(Resource):
     def get(self, id):
-        print(f"Looking for children with parent_id: {id}")  # Debug line
         children = Child.query.filter(Child.parent_id == id).all()
-        print(f"Found children: {children}")  # Debug line
-
-        if not children:
-            return make_response(
-                jsonify({"msg": "No children found for this user"}), 404
-            )
-
-        children_list = [child.to_dict() for child in children]
-        return make_response(jsonify(children_list), 200)
+        if children:
+            children_list = [child.to_dict() for child in children]
+            return make_response(jsonify(children_list), 200)

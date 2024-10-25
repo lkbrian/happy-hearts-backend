@@ -118,3 +118,23 @@ class DischargeSummaryAPI(Resource):
         return make_response(
             jsonify({"msg": "Discharge summary deleted successfully"}), 200
         )
+
+
+class DischargeForParent(Resource):
+    def get(self, id):
+        discharges = [
+            d.to_dict() for d in Discharge_summary.query.filter_by(parent_id=id).all()
+        ]
+        if discharges:
+            response = make_response(jsonify(discharges), 200)
+            return response
+
+
+class DischargeForProvider(Resource):
+    def get(self, id):
+        discharges = [
+            d.to_dict() for d in Discharge_summary.query.filter_by(provider_id=id).all()
+        ]
+        if discharges:
+            response = make_response(jsonify(discharges), 200)
+            return response

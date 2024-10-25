@@ -123,10 +123,6 @@ class DeliveryForProvider(Resource):
         ]
         if deliveries:
             return make_response(jsonify(deliveries), 200)
-        else:
-            return make_response(
-                jsonify({"msg": "You have no deliveries create one "}), 404
-            )
 
 
 class DeliveryForParent(Resource):
@@ -134,5 +130,3 @@ class DeliveryForParent(Resource):
         deliveries = [d.to_dict() for d in Delivery.query.filter_by(parent_id=id).all()]
         if deliveries:
             return make_response(jsonify(deliveries), 200)
-        else:
-            return make_response(jsonify({"msg": "You don't have a delivery"}), 404)

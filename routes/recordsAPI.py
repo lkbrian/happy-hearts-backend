@@ -1,6 +1,6 @@
 from config import db
 from flask_restful import Resource
-from models import Record,Child,Parent,Provider,Vaccine
+from models import Record, Child, Parent, Provider, Vaccine
 from flask import make_response, jsonify, request
 from sqlalchemy.exc import IntegrityError
 
@@ -25,11 +25,13 @@ class RecordsApi(Resource):
         child_id = data.get("child_id")
         national_id = data.get("national_id")
         child_certificate_no = data.get("child_certificate_no")
-        provider_id=data["provider_id"]
-        vaccine_id=data["vaccine_id"]
+        provider_id = data["provider_id"]
+        vaccine_id = data["vaccine_id"]
 
         if not (parent_id or national_id) or not (child_certificate_no or child_id):
-            return make_response(jsonify({"msg": "Parent ID and Child Certificate No are required"}), 400)
+            return make_response(
+                jsonify({"msg": "Parent ID and Child Certificate No are required"}), 400
+            )
 
         parent = (
             Parent.query.filter_by(parent_id=parent_id).first()
@@ -38,7 +40,10 @@ class RecordsApi(Resource):
         if not parent:
             return make_response(jsonify({"msg": "Parent not found"}), 404)
 
-        child = Child.query.filter_by(certificate_No=child_certificate_no).first() or Child.query.filter_by(child_id=child_id).first()
+        child = (
+            Child.query.filter_by(certificate_No=child_certificate_no).first()
+            or Child.query.filter_by(child_id=child_id).first()
+        )
         if not child:
             return make_response(jsonify({"msg": "Child not found"}), 404)
 
@@ -51,20 +56,20 @@ class RecordsApi(Resource):
             return make_response(jsonify({"msg": "Vaccine not found"}), 404)
 
         if child.parent_id != parent.parent_id:
-            return make_response(jsonify({"msg": "Child does not belong to the given parent"}), 400)
+            return make_response(
+                jsonify({"msg": "Child does not belong to the given parent"}), 400
+            )
 
         try:
             record = Record(
                 parent_id=parent.parent_id,
-                child_id=child.child_id, 
+                child_id=child.child_id,
                 provider_id=provider.provider_id,
-                vaccine_id=vaccine_id
+                vaccine_id=vaccine_id,
             )
             db.session.add(record)
             db.session.commit()
-            return make_response(
-                jsonify({"msg": "Record created successfully"}), 201
-            )
+            return make_response(jsonify({"msg": "Record created successfully"}), 201)
 
         except IntegrityError:
             db.session.rollback()
@@ -72,6 +77,7 @@ class RecordsApi(Resource):
 
         except Exception as e:
             return jsonify({"msg": str(e)}), 500
+
     def patch(self, id):
         data = request.json
         if not data:
@@ -85,25 +91,25 @@ class RecordsApi(Resource):
             for field, value in data.items():
 
                 if field == "parent_id":
-                    parent = Parent.query.get(data.get("parent_id"))                        
+                    parent = Parent.query.get(data.get("parent_id"))
                     if not parent:
                         return make_response(jsonify({"msg": "Parent not found"}), 404)
 
                 elif field == "provider_id":
                     provider = Provider.query.get(data.get("provider_id"))
                     if not provider:
-                        return make_response(jsonify({"msg": "Provider not found"}), 404)   
+                        return make_response(
+                            jsonify({"msg": "Provider not found"}), 404
+                        )
 
                 elif field == "child_certificate_no":
                     child = Child.query.get(data.get("child_certificate_no"))
                     if not child:
-                        return make_response(jsonify({"msg": "Child not found"}), 404)               
+                        return make_response(jsonify({"msg": "Child not found"}), 404)
                 if hasattr(record, field):
                     setattr(record, field, value)
             db.session.commit()
-            return make_response(
-                jsonify({"msg": "Record updated succesfully"}), 201
-            )
+            return make_response(jsonify({"msg": "Record updated succesfully"}), 201)
         except IntegrityError:
             db.session.rollback()
             return jsonify({"msg": "Integrity constraint failed"}), 400
@@ -117,3 +123,19 @@ class RecordsApi(Resource):
             return make_response(jsonify({"msg": "Record doesn't exist"}), 404)
         db.session.delete(record)
         return make_response(jsonify({"msg": "Record deleted sucesfully"}), 200)
+
+
+class VaccinationRecordsForParent(Resource):
+    def get(self, id):
+        records = [r.to_dict() for r in Record.query.filter_by(parent_id=id).all()]
+        if records:
+            response = make_response(jsonify(records), 200)
+            return response
+
+
+class VaccinationRecordsForProvider(Resource):
+    def get(self, id):
+        records = [r.to_dict() for r in Record.query.filter_by(provider_id=id).all()]
+        if records:
+            response = make_response(jsonify(records), 200)
+            return response

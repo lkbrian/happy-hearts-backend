@@ -70,7 +70,8 @@ class appointmentsAPI(Resource):
                 parent_id=parent.parent_id,
                 provider_id=provider.provider_id,
                 reason=data["reason"],
-                appointment_date=appointment_date,  # Make sure it's a valid datetime object
+                appointment_date=appointment_date,
+                status=data.get("status"),
             )
             db.session.add(appointment)
             db.session.commit()
@@ -203,8 +204,6 @@ class AppointmentForParent(Resource):
         if appointments:
             response = make_response(jsonify(appointments), 200)
             return response
-        else:
-            return make_response(jsonify({"msg": "Parent has no appointment"}), 404)
 
 
 class AppointmentForProvider(Resource):
@@ -215,5 +214,141 @@ class AppointmentForProvider(Resource):
         if appointments:
             response = make_response(jsonify(appointments), 200)
             return response
-        else:
-            return make_response(jsonify({"msg": "Provider has no appointment"}), 404)
+
+
+class ApproveAppointment(Resource):
+    def patch(self, id):
+        data = request.json
+        if not data or "status" not in data:
+            return make_response(jsonify({"msg": "No status provided"}), 400)
+
+        # Fetch the appointment
+        appointment = Appointment.query.filter_by(appointment_id=id).first()
+        if not appointment:
+            return make_response(jsonify({"msg": "Appointment not found"}), 404)
+
+        # Check if the current status is "Waiting Approval"
+        if appointment.status != "Waiting Approval":
+            return make_response(
+                jsonify({"msg": "Appointment is not awaiting approval"}), 400
+            )
+
+        try:
+            # Update the status based on the input
+            new_status = data.get("status")
+            rejection_reason = data.get("rejection_reason", None)
+
+            if new_status == "Approved":
+                appointment.status = "Approved"
+                db.session.commit()
+
+                # Send approval email
+                self.send_approval_email(appointment)
+
+                return make_response(jsonify({"msg": "Appointment approved"}), 200)
+
+            elif new_status == "Rejected":
+                if not rejection_reason:
+                    return make_response(
+                        jsonify({"msg": "Rejection reason is required"}), 400
+                    )
+
+                appointment.status = "Rejected"
+                appointment.rejection_reason = rejection_reason  # Save the reason
+                db.session.commit()
+
+                # Send rejection email
+                self.send_rejection_email(appointment, rejection_reason)
+
+                return make_response(jsonify({"msg": "Appointment rejected"}), 200)
+
+            else:
+                return make_response(jsonify({"msg": "Invalid status"}), 400)
+
+        except IntegrityError as e:
+            db.session.rollback()
+            error_message = str(e.orig)
+            return make_response(jsonify({"msg": f" {error_message}"}), 400)
+
+        except Exception as e:
+            return jsonify({"msg": str(e)}), 500
+
+    def send_approval_email(self, appointment):
+        try:
+            # Prepare email content
+            provider = appointment.provider
+            appointment_date_str = appointment.appointment_date.strftime(
+                "%Y-%m-%d %H:%M"
+            )
+            html_body = f"""
+            <div style="width: 100%;background: #ebf2fa;padding: 20px 0 0 0;font-family: system-ui, sans-serif; text-align: center;">
+                <div style="border-top: 6px solid #007BFF; background-color: #fff; display: block; padding: 8px 20px; text-align: center; max-width: 500px; border-bottom-left-radius: .4rem; border-bottom-right-radius: .4rem; letter-spacing: .037rem; line-height: 26px; margin: auto; font-size: 14px;">
+                    <img src="https://res.cloudinary.com/droynil1n/image/upload/v1728204000/e50iplialg1fawi16enn.png"
+                        alt="Happy Hearts Logo" style="width: 70%; height: auto; margin:auto">
+                    <div style="text-align: left; padding-top: 10px;">
+                        <p>Your appointment with {provider.name} on {appointment_date_str} has been <strong>approved</strong>.</p>
+                    </div>
+                    <div style="text-align: center; padding-top: 2px;">
+                        <p>If you have any questions, contact us at
+                        <a href='mailto:{os.getenv('MAIL_USERNAME')}'
+                            style='color: #007BFF; text-decoration: underline;'>{os.getenv('MAIL_USERNAME')}</a>.
+                        </p>
+                    </div>
+                </div>
+                <p style="padding: 20px 0 5px 0; text-align: center;color: rgb(150, 150, 150);font-size: 12px;">Happy Hearts Community
+                </p>
+            </div>"""
+
+            recipient_email = appointment.parent.email.strip()
+
+            # Send email message
+            msg = Message(
+                subject="Appointment Approved",
+                sender=os.getenv("MAIL_USERNAME"),
+                recipients=[recipient_email],
+                html=html_body,
+            )
+
+            mail.send(msg)
+            logger.info(f"Approval email sent to {recipient_email}")
+        except Exception as e:
+            logger.error(f"Error sending approval email: {e}")
+
+    def send_rejection_email(self, appointment, rejection_reason):
+        try:
+            # Prepare email content
+            provider = appointment.provider
+            html_body = f"""
+            <div style="width: 100%;background: #ebf2fa;padding: 20px 0 0 0;font-family: system-ui, sans-serif; text-align: center;">
+                <div style="border-top: 6px solid #007BFF; background-color: #fff; display: block; padding: 8px 20px; text-align: center; max-width: 500px; border-bottom-left-radius: .4rem; border-bottom-right-radius: .4rem; letter-spacing: .037rem; line-height: 26px; margin: auto; font-size: 14px;">
+                    <img src="https://res.cloudinary.com/droynil1n/image/upload/v1728204000/e50iplialg1fawi16enn.png"
+                        alt="Happy Hearts Logo" style="width: 70%; height: auto; margin:auto">
+                    <div style="text-align: left; padding-top: 10px;">
+                        <p>Your appointment with {provider.name} was <strong>rejected</strong>.</p>
+                        <p>Reason: {rejection_reason}</p>
+                    </div>
+                    <div style="text-align: center; padding-top: 2px;">
+                        <p>If you have any questions, contact us at
+                        <a href='mailto:{os.getenv('MAIL_USERNAME')}'
+                            style='color: #007BFF; text-decoration: underline;'>{os.getenv('MAIL_USERNAME')}</a>.
+                        </p>
+                    </div>
+                </div>
+                <p style="padding: 20px 0 5px 0; text-align: center;color: rgb(150, 150, 150);font-size: 12px;">Happy Hearts Community
+                </p>
+            </div>"""
+
+            recipient_email = appointment.parent.email.strip()
+
+            # Send email message
+            msg = Message(
+                subject="Appointment Rejected",
+                sender=os.getenv("MAIL_USERNAME"),
+                recipients=[recipient_email],
+                html=html_body,
+            )
+
+            mail.send(msg)
+            logger.info(f"Rejection email sent to {recipient_email}")
+        except Exception as e:
+            logger.error(f"Error sending rejection email: {e}")

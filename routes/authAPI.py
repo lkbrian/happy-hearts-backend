@@ -1,4 +1,4 @@
-from datetime import timedelta
+# from datetime import timedelta
 
 from flask import jsonify, make_response, request
 from flask_jwt_extended import (
@@ -58,13 +58,14 @@ class Login(Resource):
                     "role": user.role,
                     "id": user_id,
                 },
-                expires_delta=timedelta(hours=6),
+                additional_claims={"role": user.role},
             )
 
             response = {
                 "token": token,
                 "role": user.role,
                 "id": user_id,
+                "email": user.email,
             }
             print(user.email, user.role, user_id)
             return response
