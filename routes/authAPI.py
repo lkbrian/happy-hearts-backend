@@ -59,6 +59,7 @@ class Login(Resource):
                     "id": user_id,
                 },
                 additional_claims={"role": user.role},
+                expires_delta=None,
             )
 
             response = {
@@ -70,6 +71,9 @@ class Login(Resource):
             print(user.email, user.role, user_id)
             return response
         return make_response(jsonify({"msg": "Invalid credentials - password"}), 401)
+
+
+# expires_at=datetime.utcnow() + timedelta(hours=1)
 
 
 class Logout(Resource):

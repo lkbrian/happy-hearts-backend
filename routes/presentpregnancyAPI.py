@@ -1,6 +1,6 @@
 from flask_restful import Resource
 from flask import request, jsonify, make_response
-from models import Present_pregnancy,Parent
+from models import Present_pregnancy, Parent
 from config import db
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
@@ -37,7 +37,7 @@ class PresentPregnancyAPI(Resource):
                 fundal_height=data["fundal_height"],
                 comments=data["comments"],
                 clinical_notes=data["clinical_notes"],
-                parent_id=parent.parent_id
+                parent_id=parent.parent_id,
             )
             db.session.add(pregnancy)
             db.session.commit()
@@ -87,3 +87,23 @@ class PresentPregnancyAPI(Resource):
         return make_response(
             jsonify({"msg": "Present pregnancy deleted successfully"}), 200
         )
+
+
+class PresentPregnancyForParent(Resource):
+    def get(self, id):
+        pregnancies = [
+            p.to_dict() for p in Present_pregnancy.query.filter_by(parent_id=id).all()
+        ]
+        if pregnancies:
+            response = make_response(jsonify(pregnancies), 200)
+            return response
+
+
+class PresentPregnancyForProvider(Resource):
+    def get(self, id):
+        pregnancies = [
+            p.to_dict() for p in Present_pregnancy.query.filter_by(provider_id=id).all()
+        ]
+        if pregnancies:
+            response = make_response(jsonify(pregnancies), 200)
+            return response

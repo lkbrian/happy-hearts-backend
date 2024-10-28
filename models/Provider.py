@@ -35,6 +35,8 @@ class Provider(db.Model, SerializerMixin):
         "-discharge_summaries.provider",
         "-admissions.provider",
         "-appointments.provider.info",
+        "-present_pregnancies.provider",
+        "-previous_pregnancies.provider",
     )
 
     provider_id = db.Column(db.Integer, primary_key=True)
@@ -78,6 +80,12 @@ class Provider(db.Model, SerializerMixin):
     documents = db.relationship("Document", back_populates="provider", lazy=True)
     discharge_summaries = db.relationship(
         "Discharge_summary", back_populates="provider"
+    )
+    present_pregnancies = db.relationship(
+        "Present_pregnancy", back_populates="provider"
+    )
+    previous_pregnancies = db.relationship(
+        "Previous_pregnancy", back_populates="provider"
     )
 
     def set_password(self, password):

@@ -2,6 +2,7 @@ import email
 import os
 import secrets
 from datetime import datetime, timedelta
+from sqlite3 import IntegrityError
 from venv import logger
 
 from config import db, mail
@@ -204,9 +205,8 @@ class ResetPassword(Resource):
 
 class EmailChange(Resource):
     def post(self):
-        data = request.json
+        data = request.get_json()
         user_id = data.get("userId")
-        # email = data.get("email")
         account_type = data.get("accountType")
 
         if not email:
@@ -312,7 +312,7 @@ class EmailChange(Resource):
             mail.send(msg)
 
             return make_response(
-                jsonify({"message": " verification code sent to your old email"}), 200
+                jsonify({"msg": " verification code sent to your old email"}), 201
             )
         except Exception as e:
             logger.error(f"Error sending password reset email: {e}")
@@ -349,20 +349,98 @@ class EmailChange(Resource):
             db.session.commit()
             return make_response(jsonify({"msg": "Token has expired"}), 400)
 
-        if reset_token_entry.user_id:
-            entity = User.query.filter_by(user_id=reset_token_entry.user_id).first()
-        if reset_token_entry.provider_id:
-            entity = Parent.query.filter_by(parent_id=reset_token_entry.user_id).first()
-        if reset_token_entry.parent_id:
-            entity = Provider.query.filter_by(
-                provider_id=reset_token_entry.user_id
-            ).first()
+        try:
+            entity = None
+            if reset_token_entry.user_id:
+                entity = User.query.filter_by(user_id=reset_token_entry.user_id).first()
+                existing_user = User.query.filter_by(email=email).first()
+                if existing_user:
+                    return make_response(
+                        jsonify({"msg": "This email address is already in use."}), 409
+                    )
 
-        entity.email = email
-        # Delete the reset token after use
-        db.session.delete(reset_token_entry)
-        db.session.commit()
+            elif reset_token_entry.parent_id:
+                entity = Parent.query.filter_by(
+                    parent_id=reset_token_entry.parent_id
+                ).first()
+                existing_parent = Parent.query.filter_by(email=email).first()
+                if existing_parent:
+                    return make_response(
+                        jsonify({"msg": "This email address is already in use."}), 409
+                    )
 
-        return make_response(
-            jsonify({"msg": "Email has been changed successfully"}), 200
-        )
+            elif reset_token_entry.provider_id:
+                entity = Provider.query.filter_by(
+                    provider_id=reset_token_entry.provider_id
+                ).first()
+                existing_provider = Provider.query.filter_by(email=email).first()
+                if existing_provider:
+                    return make_response(
+                        jsonify({"msg": "This email address is already in use."}), 409
+                    )
+
+            if entity:
+                entity.email = email
+                db.session.delete(reset_token_entry)
+                db.session.commit()
+            try:
+
+                html_body = f"""
+                        <div
+                        style="width: 100%;background: #ebf2fa;padding: 20px 0 0 0;font-family: system-ui, sans-serif; text-align: center;">
+                        <div
+                        style="border-top: 6px solid #007BFF; background-color: #fff; display: block; padding:  8px 20px; text-align: center;   max-width: 500px;  border-bottom-left-radius: .4rem; border-bottom-right-radius: .4rem; letter-spacing: .037rem; line-height: 26px;  margin: auto; font-size: 14px; ">
+                        <!-- Logo -->
+                        <img src="https://res.cloudinary.com/droynil1n/image/upload/v1728204000/e50iplialg1fawi16enn.png"
+                            alt="Happy Hearts Logo" style="width: 70%; height: auto; margin:auto">
+                        <!-- Content Section -->
+                        <div style="text-align: left; padding-top: 10px;">
+                            <p style="text-align: center;">Email has been updated sucessfully. This will be the new channel of infomation future updates and logins</p>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div style="text-align: center; padding-top: 2px;">
+                            <p> For assistance, reach us at
+                            <a href='mailto:{os.getenv(' MAIL_USERNAME')}'
+                                style='color: #007BFF; text-decoration: underline;'>{os.getenv('MAIL_USERNAME')}</a>.
+                            </p>
+                        </div>
+                        </div>
+                        <p style="padding: 20px 0 5px 0; text-align: center;color: rgb(150, 150, 150);font-size: 12px;">Happy Hearts
+                        Community
+                        </p>
+                        </div>"""
+
+                # Create message
+                msg = Message(
+                    subject="Email Update",
+                    sender=os.getenv("MAIL_USERNAME"),
+                    recipients=[email],
+                    html=html_body,
+                )
+
+                mail.send(msg)
+
+                return make_response(jsonify({"msg": " Email Update sucessful"}), 200)
+            except Exception as e:
+                logger.error(f"Error sending password reset email: {e}")
+                db.session.rollback()
+                return make_response(
+                    jsonify({"msg": f"{e}, Check your mail and try Again"}),
+                    500,
+                )
+
+            return make_response(
+                jsonify({"msg": "Email has been changed successfully"}), 200
+            )
+        except IntegrityError as e:
+            db.session.rollback()
+            if "UNIQUE constraint failed" in str(e.orig):
+                return make_response(
+                    jsonify({"msg": "This email address is already in use."}), 400
+                )
+            return make_response(
+                jsonify({"msg": "Database integrity error occurred"}), 400
+            )
+        except Exception as e:
+            return make_response(jsonify({"msg": str(e)}), 500)

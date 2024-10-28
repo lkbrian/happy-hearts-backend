@@ -140,7 +140,6 @@ class Parent(db.Model, SerializerMixin):
 
 class Delivery(db.Model, SerializerMixin):
     __tablename__ = "deliveries"
-
     serialize_only = (
         "delivery_id",
         "mode_of_delivery",
@@ -154,7 +153,11 @@ class Delivery(db.Model, SerializerMixin):
         "parent_id",
         "parent.national_id",
     )
-    serialize_rules = ("-provider.deliveries", "-parent.delivery")
+    serialize_rules = (
+        "-provider.deliveries",
+        "-parent.delivery",
+        "-present_pregnancy.delivery",
+    )
 
     delivery_id = db.Column(db.Integer, primary_key=True)
     mode_of_delivery = db.Column(db.String, nullable=False)
@@ -164,14 +167,22 @@ class Delivery(db.Model, SerializerMixin):
     condition_of_baby = db.Column(db.String, nullable=False)
     weight_at_birth = db.Column(db.String, nullable=False)
     gender = db.Column(db.String, nullable=False)
+    fate = db.Column(db.String, nullable=False)
+    remarks = db.Column(db.String, nullable=True)
+
     provider_id = db.Column(db.Integer, db.ForeignKey("providers.provider_id"))
-
-    provider = db.relationship("Provider", back_populates="deliveries")
-
     parent_id = db.Column(db.Integer, db.ForeignKey("parents.parent_id"))
+    present_pregnancy_id = db.Column(
+        db.Integer, db.ForeignKey("present_pregnancies.pp_id")
+    )
     timestamp = db.Column(db.DateTime, nullable=False, default=current_eat_time)
 
+    provider = db.relationship("Provider", back_populates="deliveries")
     parent = db.relationship("Parent", back_populates="delivery")
+    present_pregnancy = db.relationship("Present_pregnancy", back_populates="delivery")
+    previous_pregnancy = db.relationship(
+        "Previous_pregnancy", back_populates="delivery", uselist=False
+    )
 
 
 class Admission(db.Model, SerializerMixin):
@@ -300,12 +311,14 @@ class Medications(db.Model, SerializerMixin):
         "dose_per_day",
         "referral",
         "provider_id",
+        "child_id",
         "parent_id",
         "timestamp",
     )
     serialize_rules = (
         "-provider.medications",
         "-parent.medications",
+        "-child.medications",
     )
     medication_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=True)
@@ -314,14 +327,13 @@ class Medications(db.Model, SerializerMixin):
     route = db.Column(db.String, nullable=True)
     dose_per_day = db.Column(db.String, nullable=True)
     referral = db.Column(db.String, nullable=True)
-
     provider_id = db.Column(db.Integer, db.ForeignKey("providers.provider_id"))
-
-    provider = db.relationship("Provider", back_populates="medications")
-
-    parent_id = db.Column(db.Integer, db.ForeignKey("parents.parent_id"))
+    parent_id = db.Column(db.Integer, db.ForeignKey("parents.parent_id"), nullable=True)
+    child_id = db.Column(db.Integer, db.ForeignKey("children.child_id"), nullable=True)
     timestamp = db.Column(db.DateTime, nullable=False, default=current_eat_time)
 
+    child = db.relationship("Child", back_populates="medications")
+    provider = db.relationship("Provider", back_populates="medications")
     parent = db.relationship("Parent", back_populates="medications")
 
 
@@ -339,9 +351,14 @@ class Present_pregnancy(db.Model, SerializerMixin):
         "comments",
         "clinical_notes",
         "parent_id",
+        "provider_id",
         "timestamp",
     )
-    serialize_rules = ("-parent.present_pregnacy",)
+    serialize_rules = (
+        "-parent.present_pregnacy",
+        "-provider.present_pregnancies",
+        "-delivery.present_pregnancies",
+    )
 
     pp_id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, nullable=False)
@@ -355,53 +372,54 @@ class Present_pregnancy(db.Model, SerializerMixin):
     clinical_notes = db.Column(db.String, nullable=False)
 
     parent_id = db.Column(db.Integer, db.ForeignKey("parents.parent_id"))
+    provider_id = db.Column(db.Integer, db.ForeignKey("providers.provider_id"))
     timestamp = db.Column(db.DateTime, nullable=False, default=current_eat_time)
 
     parent = db.relationship("Parent", back_populates="present_pregnacy")
+    provider = db.relationship("Provider", back_populates="present_pregnancies")
+    delivery = db.relationship(
+        "Delivery", back_populates="present_pregnancy", uselist=False
+    )
 
 
 class Previous_pregnancy(db.Model, SerializerMixin):
     __tablename__ = "previous_pregnancies"
+    serialize_only = (
+        "pp_id",
+        "year",
+        "maturity",
+        "duration_of_labour",
+        "type_of_delivery",
+        "weight_in_kg",
+        "gender",
+        "fate",
+        "peurperium",
+        "parent_id",
+        "provider_id",
+        "timestamp",
+        "delivery_id",
+    )
+    serialize_rules = (
+        "-delivery.previous_pregnancy",
+        "-parent.previous_pregnancy",
+        "-provider.previous_pregnancy",
+    )
 
     pp_id = db.Column(db.Integer, primary_key=True)
     year = db.Column(db.Integer, nullable=False)
     maturity = db.Column(db.String, nullable=False)
     duration_of_labour = db.Column(db.String, nullable=False)
     type_of_delivery = db.Column(db.String, nullable=False)
-    Weight_in_kg = db.Column(db.Integer, nullable=False)
+    weight_in_kg = db.Column(db.Integer, nullable=False)
     gender = db.Column(db.String, nullable=False)
     fate = db.Column(db.String, nullable=False)
     peurperium = db.Column(db.String, nullable=False)
+
     parent_id = db.Column(db.Integer, db.ForeignKey("parents.parent_id"))
+    provider_id = db.Column(db.Integer, db.ForeignKey("providers.provider_id"))
+    delivery_id = db.Column(db.Integer, db.ForeignKey("deliveries.delivery_id"))
     timestamp = db.Column(db.DateTime, nullable=False, default=current_eat_time)
 
     parent = db.relationship("Parent", back_populates="previous_pregnancy")
-
-    def to_dict(self):
-        # Re-arrange the order of fields manually to ensure the parent details come first
-        return {
-            "parent_id": self.parent_id,
-            "name": self.name,
-            "email": self.email,
-            "phone_number": self.phone_number,
-            "address": self.address,
-            "national_id": self.national_id,
-            "passport": self.passport,
-            "occupation": self.occupation,
-            "marital_status": self.marital_status,
-            "gender": self.gender,
-            # Now include other related sections
-            "appointments": [a.to_dict() for a in self.appointments],
-            "children": [c.to_dict() for c in self.children],
-            "medical_info_parent": [m.to_dict() for m in self.medical_info_parent],
-            "lab_tests": [lab.to_dict() for lab in self.lab_tests],
-            "medications": [med.to_dict() for med in self.medications],
-            "payments": [p.to_dict() for p in self.payments],
-            "present_pregnancy": [pp.to_dict() for pp in self.present_pregnancy],
-            "previous_pregnancy": [
-                prevp.to_dict() for prevp in self.previous_pregnancy
-            ],
-            "vaccination_records": [v.to_dict() for v in self.vaccination_records],
-            "delivery": [d.to_dict() for d in self.delivery],
-            "discharge_summaries": [ds.to_dict() for ds in self.discharge_summaries],
-        }
+    provider = db.relationship("Provider", back_populates="previous_pregnancies")
+    delivery = db.relationship("Delivery", back_populates="previous_pregnancy")

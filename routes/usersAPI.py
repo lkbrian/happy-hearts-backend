@@ -1,6 +1,6 @@
 from flask import make_response, jsonify, request
 from flask_restful import Resource
-from config import db,valid_roles
+from config import db, valid_roles
 from models import User
 from werkzeug.security import generate_password_hash
 from sqlalchemy.exc import IntegrityError
@@ -94,7 +94,8 @@ class UserAPI(Resource):
                     existing_mail = User.query.filter_by(email=value).first()
                     if existing_mail:
                         return make_response(
-                            jsonify({"msg": "a user with this email already exists"}), 409
+                            jsonify({"msg": "a user with this email already exists"}),
+                            409,
                         )
 
                 elif hasattr(user, field):
@@ -102,13 +103,10 @@ class UserAPI(Resource):
             db.session.commit()
             return make_response(jsonify({"msg": "updating user sucessful"}), 200)
 
-        # lookout for errors
-        except IntegrityError:
+        except IntegrityError as e:
             db.session.rollback()
-            return make_response(
-                jsonify({"msg": "Integrity constraint failed, update unsuccesful"}),
-                400,
-            )
+            error_message = str(e.orig)
+            return make_response(jsonify({"msg": f" {error_message}"}), 400)
 
         except Exception as e:
             return make_response(jsonify({"error": str(e)}), 500)

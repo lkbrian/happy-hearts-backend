@@ -73,13 +73,11 @@ class providersAPI(Resource):
                 if hasattr(provider, field):
                     setattr(provider, field, value)
             db.session.commit()
-            response = make_response(jsonify({"msg": "Provider updated succesfully"}))
-        except IntegrityError:
+            return make_response(jsonify({"msg": "Provider updated succesfully"}))
+        except IntegrityError as e:
             db.session.rollback()
-            response = make_response(
-                jsonify({"msg": "Integrity constraint failed"}), 400
-            )
-            return response
+            error_message = str(e.orig)
+            return make_response(jsonify({"msg": f" {error_message}"}), 400)
         except Exception as e:
             return make_response(jsonify({"msg": str(e)}), 500)
 

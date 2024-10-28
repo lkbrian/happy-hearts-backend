@@ -44,6 +44,8 @@ class DeliveryAPI(Resource):
                 condition_of_baby=data["condition_of_baby"],
                 weight_at_birth=data["weight_at_birth"],
                 gender=data["gender"],
+                fate=data["fate"],
+                remarks=data["remarks"],
                 parent_id=parent.parent_id,
                 provider_id=data["provider_id"],
             )

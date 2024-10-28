@@ -23,85 +23,38 @@ class LabTestAPI(Resource):
     def post(self):
         data = request.json
         if not data:
-            return make_response(jsonify({"msg": "No input data provided"}), 400)
+            return make_json_response("No input data provided", 400)
 
-        parent_id = data.get("parent_id")
-        child_id = data.get("child_id")
-        national_id = data.get("national_id")
-        child_certificate_no = data.get("child_certificate_no")
-        test_date_str = data.get("test_date")
+        validation_result = find_parent_or_child(
+            parent_id=data.get("parent_id"),
+            child_certificate_no=data.get("child_certificate_no"),
+        )
 
-        test_date = datetime.strptime(test_date_str.strip(), "%Y-%m-%d")
-
-        if (child_certificate_no or child_id) and (parent_id or national_id):
-            return make_response(
-                jsonify({"msg": "labtest belongs to parent or child can't be both"}),
-                400,
+        if validation_result is None:
+            return make_json_response(
+                "Lab test must belong to either parent or child, not both", 400
             )
 
-        elif child_certificate_no or child_id:
-
-            child = (
-                Child.query.filter_by(certificate_No=child_certificate_no).first()
-                or Child.query.filter_by(child_id=child_id).first()
+        try:
+            test_date = datetime.strptime(data["test_date"], "%Y-%m-%d")
+            lab_test = LabTest(
+                test_name=data["test_name"],
+                test_date=test_date,
+                result=data["result"],
+                remarks=data.get("remarks"),
+                parent_id=validation_result.get("parent", {}).get("parent_id"),
+                child_id=validation_result.get("child", {}).get("child_id"),
             )
-            if not child:
-                return make_response(jsonify({"msg": "Child not found"}), 404)
+            db.session.add(lab_test)
+            db.session.commit()
+            return make_json_response("Lab test created successfully", 201)
 
-            try:
-                lab_test = LabTest(
-                    test_name=data.get("test_name"),
-                    test_date=test_date,
-                    result=data.get("result"),
-                    remarks=data.get("remarks"),
-                    child_id=child.child_id,
-                    parent_id=None,
-                )
-                db.session.add(lab_test)
-                db.session.commit()
-                return make_response(
-                    jsonify({"msg": "Lab test for child created successfully"}), 201
-                )
+        except IntegrityError:
+            db.session.rollback()
+            return make_json_response("Integrity constraint failed", 400)
 
-            except IntegrityError:
-                db.session.rollback()
-                return make_response(
-                    jsonify({"msg": "Integrity constraint failed"}), 400
-                )
-
-            except Exception as e:
-                return make_response(jsonify({"msg": str(e)}), 500)
-
-        elif parent_id or national_id:
-            parent = (
-                Parent.query.filter_by(parent_id=parent_id).first()
-                or Parent.query.filter_by(national_id=national_id).first()
-            )
-            if not parent:
-                return make_response(jsonify({"msg": "Parent not found"}), 404)
-            try:
-                lab_test = LabTest(
-                    test_name=data.get("test_name"),
-                    test_date=test_date,
-                    result=data.get("result"),
-                    remarks=data.get("remarks"),
-                    parent_id=parent.parent_id,
-                    child_id=None,
-                )
-                db.session.add(lab_test)
-                db.session.commit()
-                return make_response(
-                    jsonify({"msg": "Lab test for parent created successfully"}), 201
-                )
-
-            except IntegrityError:
-                db.session.rollback()
-                return make_response(
-                    jsonify({"msg": "Integrity constraint failed"}), 400
-                )
-
-            except Exception as e:
-                return make_response(jsonify({"msg": str(e)}), 500)
+        except Exception as e:
+            return make_json_response(str(e), 500)
 
     def patch(self, id):
         lab_test = LabTest.query.get(id)
@@ -190,3 +143,19 @@ class LabTestsForChild(Resource):
         if labtests:
             response = make_response(jsonify(labtests), 200)
             return response
+
+
+def find_parent_or_child(parent_id=None, child_certificate_no=None):
+    if parent_id:
+        parent = Parent.query.get(parent_id)
+        if parent:
+            return {"parent": parent}
+    elif child_certificate_no:
+        child = Child.query.filter_by(certificate_No=child_certificate_no).first()
+        if child:
+            return {"child": child}
+    return None
+
+
+def make_json_response(message, status_code=200):
+    return make_response(jsonify({"msg": message}), status_code)

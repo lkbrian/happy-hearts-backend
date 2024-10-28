@@ -35,6 +35,7 @@ class Child(db.Model, SerializerMixin):
         "-lab_tests.child",
         "-discharge_summaries.child",
         "-admissions.child",
+        "-medications.child",
     )
     child_id = db.Column(db.Integer, primary_key=True)
     fullname = db.Column(db.String, nullable=False)
@@ -62,21 +63,10 @@ class Child(db.Model, SerializerMixin):
     )
     prescriptions = db.relationship(
         "Prescription", back_populates="child", lazy=True, cascade="all, delete-orphan"
-    )  # New relationship
-
-    # @hybrid_property
-    # def info(self):
-    #     return {
-    #         # "parent_id": self.parent.parent_id,
-    #         # "name": self.parent.name,
-    #         # "email": self.parent.email,
-    #         # "role": self.parent.role,
-    #         # "national_id": self.parent.national_id,
-    #         # "phone_number": self.parent.phone_number,
-    #         # "gender": self.parent.gender,
-    #         # "passport": self.parent.passport,
-    #         # "timestamp": self.parent.timestamp,
-    #     }
+    )
+    medications = db.relationship(
+        "Medications", back_populates="child", lazy=True, cascade="all, delete-orphan"
+    )
 
 
 class Record(db.Model, SerializerMixin):
@@ -112,12 +102,3 @@ class Record(db.Model, SerializerMixin):
     vaccine = db.relationship("Vaccine", back_populates="vaccination_records")
     provider = db.relationship("Provider", back_populates="vaccination_records")
     child = db.relationship("Child", back_populates="records")
-
-    # @hybrid_property
-    # def info(self):
-    #     return {
-    #         "parent": self.parent.name,
-    #         "provider": self.provider.name,
-    #         "child": self.child.fullname,
-    #         "vaccine": self.vaccine.name,
-    #     }

@@ -111,7 +111,7 @@ api.add_resource(MedicineAPI, "/medicines", "/medicines/<int:id>")
 api.add_resource(ForgotPassword, "/forgot_password")
 api.add_resource(ResetPassword, "/reset_password")
 api.add_resource(
-    EmailChange, "/changeemail", "verifyemail/<string:email>/<string:token>"
+    EmailChange, "/changeemail", "/verifyemail/<string:email>/<string:token>"
 )
 
 api.add_resource(DocumentAPI, "/documents", "/documents/<int:id>")
