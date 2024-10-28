@@ -59,7 +59,6 @@ class Login(Resource):
                     "id": user_id,
                 },
                 additional_claims={"role": user.role},
-                expires_delta=None,
             )
 
             response = {
