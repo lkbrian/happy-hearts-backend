@@ -110,7 +110,7 @@ class MedicationsAPI(Resource):
         return make_response(jsonify({"msg": "Medication deleted successfully"}), 200)
 
 
-class LabTestsForParents(Resource):
+class MedicationForParents(Resource):
     def get(self, id):
         meds = [a.to_dict() for a in Medications.query.filter_by(parent_id=id).all()]
         if meds:
@@ -118,7 +118,7 @@ class LabTestsForParents(Resource):
             return response
 
 
-class LabTestsForProviders(Resource):
+class MedicationForProviders(Resource):
     def get(self, id):
         meds = [a.to_dict() for a in Medications.query.filter_by(provider_id=id).all()]
         if meds:
@@ -126,7 +126,7 @@ class LabTestsForProviders(Resource):
             return response
 
 
-class LabTestsForChild(Resource):
+class MedicationForChild(Resource):
     def get(self, id):
         meds = [a.to_dict() for a in Medications.query.filter_by(child_id=id).all()]
         if meds:

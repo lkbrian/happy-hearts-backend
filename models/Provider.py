@@ -37,6 +37,7 @@ class Provider(db.Model, SerializerMixin):
         "-appointments.provider.info",
         "-present_pregnancies.provider",
         "-previous_pregnancies.provider",
+        "-births.provider",
     )
 
     provider_id = db.Column(db.Integer, primary_key=True)
@@ -87,6 +88,7 @@ class Provider(db.Model, SerializerMixin):
     previous_pregnancies = db.relationship(
         "Previous_pregnancy", back_populates="provider"
     )
+    births = db.relationship("Birth", back_populates="provider")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

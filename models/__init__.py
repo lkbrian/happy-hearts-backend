@@ -9,6 +9,7 @@ from .Parent import (
     Present_pregnancy,
     Previous_pregnancy,
     Admission,
+    Birth,
 )
 from .Payment import Payment
 from .Provider import Provider

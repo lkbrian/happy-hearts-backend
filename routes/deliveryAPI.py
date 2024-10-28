@@ -1,6 +1,6 @@
 from flask import jsonify, make_response, request
 from flask_restful import Resource
-from models import Delivery, Parent, Provider
+from models import Delivery, Parent, Provider, Previous_pregnancy, Birth
 from config import db
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
@@ -17,50 +17,95 @@ class DeliveryAPI(Resource):
                 return make_response(jsonify({"msg": "Delivery not found"}), 404)
             return make_response(jsonify(delivery.to_dict()), 200)
 
-    def post(self):
-        data = request.json
-        if not data:
-            return make_response(jsonify({"msg": "No input provided"}), 400)
-        national_id = data.get("national_id")
-        parent_id = data.get("parent_id")
-        parent = (
-            Parent.query.filter_by(national_id=national_id).first()
-            or Parent.query.filter_by(parent_id=parent_id).first()
+
+def post(self):
+    data = request.json
+    if not data:
+        return make_response(jsonify({"msg": "No input provided"}), 400)
+
+    national_id = data.get("national_id")
+    parent_id = data.get("parent_id")
+    provider_id = data.get("provider_id")
+
+    parent = (
+        Parent.query.filter_by(national_id=national_id).first()
+        or Parent.query.filter_by(parent_id=parent_id).first()
+    )
+
+    provider = Provider.query.filter_by(provider_id=provider_id).first()
+
+    if not parent:
+        return make_response(jsonify({"msg": "Parent not found"}), 404)
+
+    if not provider:
+        return make_response(jsonify({"msg": "Provider not found"}), 404)
+
+    try:
+        delivery = Delivery(
+            mode_of_delivery=data["mode_of_delivery"],
+            date=datetime.strptime(data["date"], "%Y-%m-%dT%H:%M"),
+            duration_of_labour=data["duration_of_labour"],
+            condition_of_mother=data["condition_of_mother"],
+            condition_of_baby=data["condition_of_baby"],
+            weight_at_birth=data["weight_at_birth"],
+            gender=data["gender"],
+            fate=data["fate"],
+            remarks=data["remarks"],
+            parent_id=parent.parent_id,
+            provider_id=data["provider_id"],
+            number_of_kids=data.get("number_of_kids", 1),
+        )
+        db.session.add(delivery)
+        db.session.commit()
+
+        previous_pregnancy = Previous_pregnancy(
+            year=2022,
+            maturity="Full-term",
+            duration_of_labour=delivery.duration_of_labour,
+            type_of_delivery="Normal",
+            weight_in_kg=delivery.weight_at_birth,
+            gender=delivery.gender,
+            fate=delivery.fate,
+            puerperium="Normal",
+            parent_id=parent.parent_id,
+            provider_id=delivery.provider_id,
+            delivery_id=delivery.delivery_id,
+        )
+        db.session.add(previous_pregnancy)
+
+        num_kids = delivery.number_of_kids
+
+        for i in range(num_kids):
+            birth_record = Birth(
+                delivery_id=delivery.delivery_id,
+                baby_name=f"Baby {i + 1}",
+                date_of_birth=delivery.date,
+                place_of_birth="Hospital",
+                weight=delivery.weight_at_birth,
+                gender=delivery.gender,
+                mother_full_name=delivery.parent.name,
+                birth_attendant=delivery.provider.name,
+                mother_national_id=delivery.parent.national_id,
+                marital_status=delivery.parent.marital_status,
+                provider_id=delivery.provider_id,
+                parent_id=delivery.parent_id,
+            )
+            db.session.add(birth_record)
+
+        db.session.commit()
+
+        return make_response(
+            jsonify({"msg": "Delivery and related records created successfully"}), 201
         )
 
-        provider = Provider.query.get(data.get("provider_id"))
+    except IntegrityError as e:
+        db.session.rollback()
+        error_message = str(e.orig)
+        return make_response(jsonify({"msg": f"{error_message}"}), 400)
 
-        if not parent:
-            return make_response(jsonify({"msg": "Parent not found"}), 404)
-
-        if not provider:
-            return make_response(jsonify({"msg": "Provider not found"}), 404)
-        try:
-            delivery = Delivery(
-                mode_of_delivery=data["mode_of_delivery"],
-                date=datetime.strptime(data["date"], "%Y-%m-%dT%H:%M"),
-                duration_of_labour=data["duration_of_labour"],
-                condition_of_mother=data["condition_of_mother"],
-                condition_of_baby=data["condition_of_baby"],
-                weight_at_birth=data["weight_at_birth"],
-                gender=data["gender"],
-                fate=data["fate"],
-                remarks=data["remarks"],
-                parent_id=parent.parent_id,
-                provider_id=data["provider_id"],
-            )
-            db.session.add(delivery)
-            db.session.commit()
-
-            return make_response(jsonify({"msg": "Delivery created successfully"}), 201)
-
-        except IntegrityError as e:
-            db.session.rollback()
-            error_message = str(e.orig)
-            return make_response(jsonify({"msg": f" {error_message}"}), 400)
-
-        except Exception as e:
-            return make_response(jsonify({"msg": str(e)}), 500)
+    except Exception as e:
+        db.session.rollback()
+        return make_response(jsonify({"msg": str(e)}), 500)
 
     def patch(self, id):
         data = request.json

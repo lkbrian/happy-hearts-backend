@@ -63,7 +63,7 @@ class ChildrenAPI(Resource):
             db.session.add(child)
             db.session.commit()
             document = Document(
-                entityType="child_passport",  # Assuming document type for child passport
+                entityType="Certificate",  # Assuming document type for child passport
                 documentType=upload_result["format"],  # e.g., jpg, png
                 fileName=file.name,
                 size=upload_result["bytes"],

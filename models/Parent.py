@@ -63,6 +63,7 @@ class Parent(db.Model, SerializerMixin):
         "-prescriptions.parent",
         "-documents.parent",
         "-admissions.parent",
+        "-births.parent",
     )
 
     parent_id = db.Column(db.Integer, primary_key=True)
@@ -130,6 +131,7 @@ class Parent(db.Model, SerializerMixin):
     reset_tokens = db.relationship("ResetToken", back_populates="parent")
     lab_tests = db.relationship("LabTest", back_populates="parent", lazy=True)
     prescriptions = db.relationship("Prescription", back_populates="parent", lazy=True)
+    births = db.relationship("Birth", back_populates="parent")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -152,6 +154,9 @@ class Delivery(db.Model, SerializerMixin):
         "provider_id",
         "parent_id",
         "parent.national_id",
+        "parent.name",
+        "parent.marital_status",
+        "provider.name",
     )
     serialize_rules = (
         "-provider.deliveries",
@@ -183,6 +188,7 @@ class Delivery(db.Model, SerializerMixin):
     previous_pregnancy = db.relationship(
         "Previous_pregnancy", back_populates="delivery", uselist=False
     )
+    births = db.relationship("Birth", back_populates="delivery")
 
 
 class Admission(db.Model, SerializerMixin):
@@ -393,7 +399,7 @@ class Previous_pregnancy(db.Model, SerializerMixin):
         "weight_in_kg",
         "gender",
         "fate",
-        "peurperium",
+        "puerperium",
         "parent_id",
         "provider_id",
         "timestamp",
@@ -413,7 +419,7 @@ class Previous_pregnancy(db.Model, SerializerMixin):
     weight_in_kg = db.Column(db.Integer, nullable=False)
     gender = db.Column(db.String, nullable=False)
     fate = db.Column(db.String, nullable=False)
-    peurperium = db.Column(db.String, nullable=False)
+    puerperium = db.Column(db.String, nullable=False)
 
     parent_id = db.Column(db.Integer, db.ForeignKey("parents.parent_id"))
     provider_id = db.Column(db.Integer, db.ForeignKey("providers.provider_id"))
@@ -423,3 +429,58 @@ class Previous_pregnancy(db.Model, SerializerMixin):
     parent = db.relationship("Parent", back_populates="previous_pregnancy")
     provider = db.relationship("Provider", back_populates="previous_pregnancies")
     delivery = db.relationship("Delivery", back_populates="previous_pregnancy")
+
+
+class Birth(db.Model, SerializerMixin):
+    __tablename__ = "births"
+
+    serialize_only = (
+        "birth_id",
+        "delivery_id",
+        "baby_name",
+        "date_of_birth",
+        "place_of_birth",
+        "weight",
+        "gender",
+        "mother_full_name",
+        "mother_national_id",
+        "mother_age",
+        "mother_occupation",
+        "father_full_name",
+        "father_national_id",
+        "father_age",
+        "father_occupation",
+        "marital_status",
+    )
+
+    birth_id = db.Column(db.Integer, primary_key=True)
+    delivery_id = db.Column(
+        db.Integer, db.ForeignKey("deliveries.delivery_id"), nullable=False
+    )
+    baby_name = db.Column(db.String, nullable=False)
+    date_of_birth = db.Column(db.DateTime, nullable=False)
+    place_of_birth = db.Column(db.String, nullable=False)
+    weight = db.Column(db.String, nullable=False)
+    gender = db.Column(db.String, nullable=False)
+
+    mother_full_name = db.Column(db.String, nullable=False)
+    mother_national_id = db.Column(db.String, nullable=False)
+    mother_age = db.Column(db.Integer, nullable=True)
+    mother_occupation = db.Column(db.String, nullable=True)
+
+    father_full_name = db.Column(db.String, nullable=True)
+    father_national_id = db.Column(db.String, nullable=True)
+    father_age = db.Column(db.Integer, nullable=True)
+    father_occupation = db.Column(db.String, nullable=True)
+    marital_status = db.Column(db.String, nullable=True)
+    birth_attendant = db.Column(db.String, nullable=True)
+    date_of_notification = db.Column(
+        db.DateTime, nullable=False, default=current_eat_time
+    )
+
+    provider_id = db.Column(db.Integer, db.ForeignKey("providers.provider_id"))
+    parent_id = db.Column(db.Integer, db.ForeignKey("parents.parent_id"))
+
+    provider = db.relationship("Provider", back_populates="births")
+    parent = db.relationship("Parent", back_populates="births")
+    delivery = db.relationship("Delivery", back_populates="births")
