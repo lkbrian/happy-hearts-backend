@@ -1,9 +1,11 @@
 from flask_restful import Resource
 from flask import request, jsonify, make_response
-from models import Medical_info_parent,Parent
+from models import Medical_info_parent, Parent
 from config import db
 from sqlalchemy.exc import IntegrityError
+
 # from datetime import datetime
+
 
 class MedicalInfoParentAPI(Resource):
     def get(self, id=None):
@@ -20,7 +22,7 @@ class MedicalInfoParentAPI(Resource):
         data = request.json
         if not data:
             return make_response(jsonify({"msg": "No input provided"}), 400)
-        
+
         national_id = data["national_id"]
         parent = Parent.query.filter_by(national_id=national_id).first()
         if not parent:
@@ -38,7 +40,9 @@ class MedicalInfoParentAPI(Resource):
             )
             db.session.add(info)
             db.session.commit()
-            return make_response(jsonify({"msg": "Medical info created successfully"}), 201)
+            return make_response(
+                jsonify({"msg": "Medical info created successfully"}), 201
+            )
 
         except IntegrityError:
             db.session.rollback()
@@ -79,3 +83,13 @@ class MedicalInfoParentAPI(Resource):
         db.session.delete(info)
         db.session.commit()
         return make_response(jsonify({"msg": "Medical info deleted successfully"}), 200)
+
+
+class MedicalInfoForParent(Resource):
+    def get(self, id):
+        medinfo = [
+            m.to_dict() for m in Medical_info_parent.query.filter_by(parent_id=id).all()
+        ]
+        if medinfo:
+            response = make_response(jsonify(medinfo), 200)
+            return response

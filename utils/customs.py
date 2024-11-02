@@ -4,7 +4,7 @@ from sqlalchemy.types import TypeDecorator, VARCHAR
 from datetime import datetime
 import pytz
 from config import db, app, mail
-from models import Appointment
+from models import Appointment, Birth
 import logging
 import os
 from flask import make_response, jsonify
@@ -136,3 +136,11 @@ class JSONEncodedList(TypeDecorator):
         return json.loads(value)
 
     # appointment_date = db.Column(db.DateTime(timezone=True), nullable=False)
+
+
+def generate_serial_number():
+    latest_record = db.session.query(Birth).order_by(Birth.serial_number.desc()).first()
+    if latest_record is None:
+        return 4953636
+    else:
+        return latest_record.serial_number + 1

@@ -25,8 +25,6 @@ class Child(db.Model, SerializerMixin):
         "age",
         "gender",
         "prescriptions",
-        "records",
-        "lab_tests",
     )
     serialize_rules = (
         "-parent_id",
@@ -36,6 +34,7 @@ class Child(db.Model, SerializerMixin):
         "-discharge_summaries.child",
         "-admissions.child",
         "-medications.child",
+        "-prescriptions.child",
     )
     child_id = db.Column(db.Integer, primary_key=True)
     fullname = db.Column(db.String, nullable=False)

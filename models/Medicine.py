@@ -53,3 +53,4 @@ class Medicine(db.Model, SerializerMixin):
     prescriptions = db.relationship(
         "Prescription", back_populates="medicine", lazy=True
     )
+    medications = db.relationship("Medications", back_populates="medicine", lazy=True)

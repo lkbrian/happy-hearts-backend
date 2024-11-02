@@ -34,6 +34,7 @@ class User(db.Model, SerializerMixin):
     timestamp = db.Column(db.DateTime, nullable=False, default=current_eat_time)
 
     reset_tokens = db.relationship("ResetToken", back_populates="user")
+    messages = db.relationship("Message", back_populates="user")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

@@ -29,7 +29,31 @@ class JSONEncodedList(TypeDecorator):
 
 class Prescription(db.Model, SerializerMixin):
     __tablename__ = "prescriptions"
-
+    serialize_only = (
+        "prescription_id",
+        "parent_id",
+        "provider_id",
+        "child_id",
+        "medicine_id",
+        "quantity",
+        "dosage",
+        "duration",
+        "refill_count",
+        "filled_date",
+        "expiry_date",
+        "timestamp",
+        "parent.name",
+        "parent.national_id",
+        "provider.name",
+        "child.fullname",
+        "child.certificate_No",
+        "medicine.name",
+    )
+    serialize_rules = (
+        "-parent.prescriptions",
+        "-provider.prescriptions",
+        "-child.prescriptions",
+    )
     prescription_id = db.Column(db.Integer, primary_key=True)
     parent_id = db.Column(
         db.Integer, db.ForeignKey("parents.parent_id"), nullable=True  # Nullable parent
@@ -58,3 +82,6 @@ class Prescription(db.Model, SerializerMixin):
     medicine = db.relationship(
         "Medicine", back_populates="prescriptions", lazy=True
     )  # Back-populate to Medicine
+    medications = db.relationship(
+        "Medications", back_populates="prescription", lazy=True
+    )

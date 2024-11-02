@@ -94,3 +94,24 @@ class PreviousPregnancyAPI(Resource):
         return make_response(
             jsonify({"msg": "Previous pregnancy deleted successfully"}), 200
         )
+
+
+class PreviousPregnancyForParent(Resource):
+    def get(self, id):
+        pregnancies = [
+            p.to_dict() for p in Previous_pregnancy.query.filter_by(parent_id=id).all()
+        ]
+        if pregnancies:
+            response = make_response(jsonify(pregnancies), 200)
+            return response
+
+
+class PreviousPregnancyForProvider(Resource):
+    def get(self, id):
+        pregnancies = [
+            p.to_dict()
+            for p in Previous_pregnancy.query.filter_by(provider_id=id).all()
+        ]
+        if pregnancies:
+            response = make_response(jsonify(pregnancies), 200)
+            return response

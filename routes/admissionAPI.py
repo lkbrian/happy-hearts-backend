@@ -133,7 +133,13 @@ class AdmissionAPI(Resource):
                     child = Child.query.get(value)
                     if child is None:
                         return make_response(jsonify({"msg": "Child not found"}), 404)
-
+                elif field == "admission_date":
+                    try:
+                        value = datetime.strptime(value, "%Y-%m-%d %H:%M")
+                    except ValueError:
+                        return make_response(
+                            jsonify({"msg": "Invalid date format. Use YYYY-MM-DD"}), 400
+                        )
                 if hasattr(admission, field):
                     setattr(admission, field, value)
             db.session.commit()

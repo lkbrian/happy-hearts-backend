@@ -15,13 +15,15 @@ class Message(db.Model, SerializerMixin):
     __tablename__ = "messages"
     serialize_only = (
         "message_id",
-        "first_name",
-        "last_name",
+        "name",
         "email",
         "message",
         "user_id",
         "parent_id",
         "provider_id",
+        "is_read",
+        "is_viwed",
+        "is_replied",
         "conversation_id",
         "timestamp",
     )
@@ -30,21 +32,18 @@ class Message(db.Model, SerializerMixin):
     conversation_id = db.Column(
         db.Integer, db.ForeignKey("conversations.conversation_id"), nullable=False
     )
-    first_name = db.Column(db.String, nullable=True)  # Nullable for guests
-    last_name = db.Column(db.String, nullable=True)  # Nullable for guests
-    email = db.Column(db.String, nullable=True)  # Nullable for guests
+    name = db.Column(db.String, nullable=True)
+    email = db.Column(db.String, nullable=True)
     message = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, nullable=True, default=False)
+    is_replied = db.Column(db.Boolean, nullable=True, default=False)
+    original_message_id = db.Column(db.Integer, nullable=True)
 
-    # Foreign keys for relationships
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=True
-    )  # Nullable for guests
-    parent_id = db.Column(
-        db.Integer, db.ForeignKey("parents.parent_id"), nullable=True
-    )  # Nullable for guests
+    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey("parents.parent_id"), nullable=True)
     provider_id = db.Column(
         db.Integer, db.ForeignKey("providers.provider_id"), nullable=True
-    )  # Nullable for guests
+    )
 
     timestamp = db.Column(db.DateTime, nullable=False, default=current_eat_time)
 

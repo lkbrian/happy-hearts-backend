@@ -21,3 +21,4 @@ from .Medicine import Medicine
 from .Prescription import Prescription
 from .Documents import Document
 from .Facilities import Bed, Room
+from .Messages import Message, Conversation
