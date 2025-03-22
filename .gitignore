@@ -4,13 +4,18 @@
 # Ignore Python virtual environment
 .venv/
 .venv/*
+venv/
+venv/*
 
 # Ignore environment files
 .env
 
 # Ignore instance folder and its database files
 /instance/
+instance/*
+instance/*.sqlite
 /instance/*.db
+/instance/*.sqlite
 
 # Ignore migrations folder and its contents
 # /migrations/
@@ -19,3 +24,5 @@
 # Ignore __pycache__ folders
 __pycache__/
 *.pyc
+hh_instance.pem
+happyhearts.pem

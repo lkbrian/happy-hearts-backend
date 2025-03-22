@@ -1,0 +1,16 @@
+nohup: ignoring input
+[2025-03-22 11:15:59 +0000] [20628] [INFO] Starting gunicorn 23.0.0
+[2025-03-22 11:15:59 +0000] [20628] [INFO] Listening at: http://0.0.0.0:5555 (20628)
+[2025-03-22 11:15:59 +0000] [20628] [INFO] Using worker: sync
+[2025-03-22 11:16:00 +0000] [20629] [INFO] Booting worker with pid: 20629
+[2025-03-22 11:16:00 +0000] [20630] [INFO] Booting worker with pid: 20630
+[2025-03-22 11:16:00 +0000] [20631] [INFO] Booting worker with pid: 20631
+[2025-03-22 11:16:00 +0000] [20632] [INFO] Booting worker with pid: 20632
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts

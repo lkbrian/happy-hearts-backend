@@ -188,6 +188,5 @@ scheduler.add_job(
 )
 
 if __name__ == "__main__":
-    scheduler.start()
     app.run(port=5555, debug=True)
     # scheduler.start()
