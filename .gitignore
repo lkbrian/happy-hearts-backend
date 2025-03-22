@@ -26,3 +26,5 @@ __pycache__/
 *.pyc
 hh_instance.pem
 happyhearts.pem
+gunicorn.log
+
